@@ -172,57 +172,6 @@ semantic_model:
       description: "the number of invoices"
       agg: count_distinct
       expr: invoice_id
-  relationships:
-    - name: contact
-      to_entity: contact
-      expr: >
-        FROM hub_invoice
-        INNER JOIN link_invoice_contact 
-          ON hub_invoice.invoice_hkey = link_invoice_contact.invoice_hkey
-        INNER JOIN hub_contact 
-          ON link_invoice_contact.contact_hkey = hub_contact.contact_hkey
-        LEFT JOIN sat_contact 
-          ON hub_contact.contact_hkey = sat_contact.contact_hkey
-    - name: payment
-      to_entity: payment
-      expr: >
-        FROM hub_invoice
-        INNER JOIN link_invoice_payment 
-          ON hub_invoice.invoice_hkey = link_invoice_payment.invoice_hkey
-        INNER JOIN hub_payment 
-          ON link_invoice_payment.payment_hkey = hub_payment.payment_hkey
-        LEFT JOIN sat_payment 
-          ON hub_payment.payment_hkey = sat_payment.payment_hkey
-    - name: credit_note
-      to_entity: credit_note
-      expr: >
-        FROM hub_invoice
-        INNER JOIN link_invoice_credit_note 
-          ON hub_invoice.invoice_hkey = link_invoice_credit_note.invoice_hkey
-        INNER JOIN hub_credit_note 
-          ON link_invoice_credit_note.credit_note_hkey = hub_credit_note.credit_note_hkey
-        LEFT JOIN sat_credit_note 
-          ON hub_credit_note.credit_note_hkey = sat_credit_note.credit_note_hkey
-    - name: prepayment
-      to_entity: prepayment
-      expr: >
-        FROM hub_invoice
-        INNER JOIN link_invoice_prepayment 
-          ON hub_invoice.invoice_hkey = link_invoice_prepayment.invoice_hkey
-        INNER JOIN hub_prepayment 
-          ON link_invoice_prepayment.prepayment_hkey = hub_prepayment.prepayment_hkey
-        LEFT JOIN sat_prepayment 
-          ON hub_prepayment.prepayment_hkey = sat_prepayment.prepayment_hkey
-    - name: overpayment
-      to_entity: overpayment
-      expr: >
-        FROM hub_invoice
-        INNER JOIN link_invoice_overpayment 
-          ON hub_invoice.invoice_hkey = link_invoice_overpayment.invoice_hkey
-        INNER JOIN hub_overpayment 
-          ON link_invoice_overpayment.overpayment_hkey = hub_overpayment.overpayment_hkey
-        LEFT JOIN sat_overpayment 
-          ON hub_overpayment.overpayment_hkey = sat_overpayment.overpayment_hkey
   filters:
     - name: authorised_invoices
       description: "filter for authorised invoices only"
