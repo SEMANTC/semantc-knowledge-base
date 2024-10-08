@@ -10,7 +10,7 @@ def setup_pinecone(api_key, index_name):
         # if not, create it
         pc.create_index(
             name=index_name,
-            dimension=1536,  # OpenAI embeddings are 1536 dimensions
+            dimension=3072,  # OpenAI embeddings are 3072 dimensions
             metric="cosine",
             spec=ServerlessSpec(cloud="aws", region="us-east-1")
         )
