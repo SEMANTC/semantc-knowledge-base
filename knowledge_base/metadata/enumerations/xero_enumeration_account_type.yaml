@@ -1,0 +1,10 @@
+account_type:
+  description: "enumeration of possible account types in Xero."
+  values:
+    - BANK
+    - EXPENSE
+    - REVENUE
+    - ASSET
+    - LIABILITY
+    - EQUITY
+    - OTHER

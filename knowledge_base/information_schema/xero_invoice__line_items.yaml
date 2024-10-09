@@ -1,0 +1,67 @@
+table: xero_invoice__line_items
+columns:
+  - name: invoice_id
+    type: string
+    foreign_key: xero_invoices.invoice_id
+    description: "Xero identifier for the invoice."
+    notes: "[optional]"
+
+  - name: line_item_id
+    type: string
+    primary_key: true
+    description: "LineItem unique ID."
+    notes: "[optional]"
+
+  - name: account_code
+    type: string
+    description: "Account code associated with the line item."
+    notes: "[optional]"
+
+  - name: description
+    type: string
+    description: "Description of the line item."
+    notes: "[optional]"
+
+  - name: discount_rate
+    type: float
+    description: "Percentage discount applied to the line item."
+    notes: "[optional]"
+
+  - name: item_code
+    type: string
+    description: "Code of the item from Items."
+    notes: "[optional]"
+
+  - name: line_amount
+    type: float
+    description: "Line amount reflecting discounted price if a discount is applied."
+    notes: "[optional]"
+
+  - name: quantity
+    type: float
+    description: "Quantity of the line item."
+    notes: "[optional]"
+
+  - name: tax_amount
+    type: float
+    description: "Tax amount for the line item."
+    notes: "[optional]"
+
+  - name: tax_type
+    type: string
+    description: "The tax type from TaxRates."
+    notes: "[optional]"
+
+  - name: unit_amount
+    type: float
+    description: "Unit amount of the line item."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the record was ingested into BigQuery."
+    notes: "[optional]"
+relationships:
+  - table: xero_invoices
+    type: many-to-one
+    on: invoice_id

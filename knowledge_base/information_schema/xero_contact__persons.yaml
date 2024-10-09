@@ -1,0 +1,36 @@
+table: xero_contact__persons
+columns:
+  - name: contact_id
+    type: string
+    foreign_key: xero_contacts.contact_id
+    description: "Xero identifier for the contact."
+    notes: "[optional]"
+
+  - name: email_address
+    type: string
+    description: "Email address of the contact person."
+    notes: "[optional]"
+
+  - name: first_name
+    type: string
+    description: "First name of the contact person (max length = 255)."
+    notes: "[optional]"
+
+  - name: include_in_emails
+    type: boolean
+    description: "Boolean indicating whether the contact should be included in emails with invoices etc."
+    notes: "[optional]"
+
+  - name: last_name
+    type: string
+    description: "Last name of the contact person (max length = 255)."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the record was ingested into BigQuery."
+    notes: "[optional]"
+relationships:
+  - table: xero_contacts
+    type: many-to-one
+    on: contact_id

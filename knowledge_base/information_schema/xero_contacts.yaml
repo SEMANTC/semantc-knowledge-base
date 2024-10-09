@@ -1,0 +1,221 @@
+table: xero_contacts
+columns:
+  - name: contact_id
+    type: string
+    primary_key: true
+    description: "Xero identifier for the contact."
+    notes: "[optional]"
+
+  - name: merged_to_contact_id
+    type: string
+    description: "ID for the destination of a merged contact. Only returned when using paging or when fetching a contact by ContactId or ContactNumber."
+    notes: "[optional]"
+
+  - name: contact_number
+    type: string
+    description: "Used to identify contacts in external systems (max length = 50). Displayed as Contact Code in the Contacts UI in Xero."
+    notes: "[optional]"
+
+  - name: account_number
+    type: string
+    description: "User-defined account number. Can be updated via the API and the Xero UI (max length = 50)."
+    notes: "[optional]"
+
+  - name: contact_status
+    type: string
+    description: "Current status of a contact – see contact status types."
+    notes: "[optional]"
+
+  - name: name
+    type: string
+    description: "Full name of contact/organisation (max length = 255)."
+    notes: "[optional]"
+
+  - name: first_name
+    type: string
+    description: "First name of contact person (max length = 255)."
+    notes: "[optional]"
+
+  - name: last_name
+    type: string
+    description: "Last name of contact person (max length = 255)."
+    notes: "[optional]"
+
+  - name: company_number
+    type: string
+    description: "Company registration number (max length = 50)."
+    notes: "[optional]"
+
+  - name: email_address
+    type: string
+    description: "Email address of contact person (umlauts not supported) (max length = 255)."
+    notes: "[optional]"
+
+  - name: contact_persons
+    type: string
+    description: "List of contact persons. See ContactPerson component."
+    notes: "[optional]"
+
+  - name: bank_account_details
+    type: string
+    description: "Bank account number of contact."
+    notes: "[optional]"
+
+  - name: tax_number
+    type: string
+    description: "Tax number of contact – known as ABN (Australia), GST Number (New Zealand), VAT Number (UK) or Tax ID Number (US and global) in the Xero UI, depending on region (max length = 50)."
+    notes: "[optional]"
+
+  - name: accounts_receivable_tax_type
+    type: string
+    description: "The tax type from TaxRates."
+    notes: "[optional]"
+
+  - name: accounts_payable_tax_type
+    type: string
+    description: "The tax type from TaxRates."
+    notes: "[optional]"
+
+  - name: addresses
+    type: string
+    description: "List of addresses. See Address component."
+    notes: "[optional]"
+
+  - name: phones
+    type: string
+    description: "List of phones. See Phone component."
+    notes: "[optional]"
+
+  - name: is_supplier
+    type: boolean
+    description: "Boolean indicating if the contact is a supplier (has AP invoices entered against them). Automatically set when an accounts payable invoice is generated."
+    notes: "[optional]"
+
+  - name: is_customer
+    type: boolean
+    description: "Boolean indicating if the contact is a customer (has AR invoices entered against them). Automatically set when an accounts receivable invoice is generated."
+    notes: "[optional]"
+
+  - name: sales_default_line_amount_type
+    type: string
+    description: "Default sales line amount type for the contact."
+    notes: "[optional]"
+
+  - name: purchases_default_line_amount_type
+    type: string
+    description: "Default purchases line amount type for the contact."
+    notes: "[optional]"
+
+  - name: default_currency
+    type: string
+    description: "Currency code used by the contact."
+    notes: "[optional]"
+
+  - name: xero_network_key
+    type: string
+    description: "Store XeroNetworkKey for contacts."
+    notes: "[optional]"
+
+  - name: sales_default_account_code
+    type: string
+    description: "Default sales account code for the contact."
+    notes: "[optional]"
+
+  - name: purchases_default_account_code
+    type: string
+    description: "Default purchases account code for the contact."
+    notes: "[optional]"
+
+  - name: sales_tracking_categories
+    type: string
+    description: "Default sales tracking categories for the contact."
+    notes: "[optional]"
+
+  - name: purchases_tracking_categories
+    type: string
+    description: "Default purchases tracking categories for the contact."
+    notes: "[optional]"
+
+  - name: tracking_category_name
+    type: string
+    description: "Name of the Tracking Category assigned to the contact under SalesTrackingCategories and PurchasesTrackingCategories."
+    notes: "[optional]"
+
+  - name: tracking_category_option
+    type: string
+    description: "Name of the Tracking Option assigned to the contact under SalesTrackingCategories and PurchasesTrackingCategories."
+    notes: "[optional]"
+
+  - name: payment_terms
+    type: string
+    description: "Payment terms for the contact."
+    notes: "[optional]"
+
+  - name: updated_date_utc
+    type: timestamp
+    description: "UTC timestamp of last update to the contact."
+    notes: "[optional]"
+
+  - name: contact_groups
+    type: string
+    description: "List of contact groups the contact is included in."
+    notes: "[optional]"
+
+  - name: website
+    type: string
+    description: "Website address for contact (read only)."
+    notes: "[optional]"
+
+  - name: branding_theme
+    type: string
+    description: "Branding theme assigned to the contact."
+    notes: "[optional]"
+
+  - name: batch_payments
+    type: string
+    description: "List of batch payment details."
+    notes: "[optional]"
+
+  - name: discount
+    type: float
+    description: "Default discount rate for the contact (read only)."
+    notes: "[optional]"
+
+  - name: balances
+    type: string
+    description: "Balances associated with the contact."
+    notes: "[optional]"
+
+  - name: attachments
+    type: string
+    description: "List of attachments from the API."
+    notes: "[optional]"
+
+  - name: has_attachments
+    type: boolean
+    description: "Boolean indicating if the contact has an attachment."
+    notes: "[optional] [default to False]"
+
+  - name: validation_errors
+    type: string
+    description: "Displays array of validation error messages from the API."
+    notes: "[optional]"
+
+  - name: has_validation_errors
+    type: boolean
+    description: "Boolean indicating if the contact has validation errors."
+    notes: "[optional] [default to False]"
+
+  - name: status_attribute_string
+    type: string
+    description: "Status of the contact object."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the record was ingested into BigQuery."
+    notes: "[optional]"
+relationships:
+  - table: xero_accounts
+    type: many-to-one
+    on: account_id

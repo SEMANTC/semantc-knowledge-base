@@ -1,0 +1,36 @@
+table: xero_contact__phones
+columns:
+  - name: contact_id
+    type: string
+    foreign_key: xero_contacts.contact_id
+    description: "Xero identifier for the contact."
+    notes: "[optional]"
+
+  - name: phone_area_code
+    type: string
+    description: "Area code of the phone number (max length = 10)."
+    notes: "[optional]"
+
+  - name: phone_country_code
+    type: string
+    description: "Country code of the phone number (max length = 20)."
+    notes: "[optional]"
+
+  - name: phone_number
+    type: string
+    description: "Phone number (max length = 50)."
+    notes: "[optional]"
+
+  - name: phone_type
+    type: string
+    description: "Type of phone (e.g., mobile, work, home)."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the record was ingested into BigQuery."
+    notes: "[optional]"
+relationships:
+  - table: xero_contacts
+    type: many-to-one
+    on: contact_id

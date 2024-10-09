@@ -1,0 +1,261 @@
+# sample_queries.yaml
+- question: "List all active accounts."
+  sql: |
+    SELECT account_id, code, name, type, status
+    FROM xero_accounts
+    WHERE status = 'ACTIVE';
+
+- question: "Show all contacts with their associated account names."
+  sql: |
+    SELECT c.contact_id, c.name AS contact_name, a.name AS account_name
+    FROM xero_contacts AS c
+    JOIN xero_accounts AS a ON c.account_id = a.account_id;
+
+- question: "Retrieve all invoices issued in the last quarter."
+  sql: |
+    SELECT invoice_id, invoice_number, contact_id, date, total
+    FROM xero_invoices
+    WHERE date >= DATE_SUB(DATE_TRUNC(CURRENT_DATE(), QUARTER), INTERVAL 3 MONTH)
+      AND date < DATE_TRUNC(CURRENT_DATE(), QUARTER);
+
+- question: "Get the total amount paid for each invoice."
+  sql: |
+    SELECT i.invoice_id, i.invoice_number, SUM(p.amount) AS total_paid
+    FROM xero_invoices AS i
+    JOIN xero_invoice__payments AS ip ON i.invoice_id = ip.invoice_id
+    JOIN xero_payments AS p ON ip.payment_id = p.payment_id
+    GROUP BY i.invoice_id, i.invoice_number;
+
+- question: "List all payments made by a specific contact named 'John Doe'."
+  sql: |
+    SELECT p.payment_id, p.amount, p.date, p.status
+    FROM xero_payments AS p
+    JOIN xero_contacts AS c ON p.contact_id = c.contact_id
+    WHERE c.name = 'John Doe';
+
+- question: "Show all overpayments linked to invoices."
+  sql: |
+    SELECT o.overpayment_id, o.invoice_id, o.amount, o.date
+    FROM xero_invoice__overpayments AS o
+    JOIN xero_invoices AS i ON o.invoice_id = i.invoice_id;
+
+- question: "List all credit notes applied to invoice number 'INV-1001'."
+  sql: |
+    SELECT cn.credit_note_id, cn.credit_note_number, cn.total
+    FROM xero_invoice__credit_notes AS cn
+    JOIN xero_invoices AS i ON cn.invoice_id = i.invoice_id
+    WHERE i.invoice_number = 'INV-1001';
+
+- question: "Get detailed line items for invoice 'INV-1001'."
+  sql: |
+    SELECT li.line_item_id, li.description, li.quantity, li.unit_amount, li.tax_amount
+    FROM xero_invoice__line_items AS li
+    JOIN xero_invoices AS i ON li.invoice_id = i.invoice_id
+    WHERE i.invoice_number = 'INV-1001';
+
+- question: "Retrieve all contacts in the 'Premium Clients' contact group."
+  sql: |
+    SELECT c.contact_id, c.name, cg.group_name
+    FROM xero_contact__group_contacts AS cg
+    JOIN xero_contacts AS c ON cg.contact_id = c.contact_id
+    WHERE cg.group_name = 'Premium Clients';
+
+- question: "List all addresses associated with contact 'Acme Corp'."
+  sql: |
+    SELECT a.address_line1, a.address_line2, a.city, a.region, a.postal_code, a.country
+    FROM xero_contacts AS c
+    JOIN xero_contact__address AS a ON c.contact_id = a.contact_id
+    WHERE c.name = 'Acme Corp';
+
+- question: "Get all phone numbers for the contact 'Jane Smith'."
+  sql: |
+    SELECT p.phone_type, p.phone_number, p.phone_area_code, p.phone_country_code
+    FROM xero_contacts AS c
+    JOIN xero_contact__phones AS p ON c.contact_id = p.contact_id
+    WHERE c.name = 'Jane Smith';
+
+- question: "List all items that are tracked as inventory."
+  sql: |
+    SELECT item_id, name, quantity_on_hand, total_cost_pool
+    FROM xero_items
+    WHERE is_tracked_as_inventory = TRUE;
+
+- question: "Get all invoices that have attachments."
+  sql: |
+    SELECT invoice_id, invoice_number, date, total
+    FROM xero_invoices
+    WHERE has_attachments = TRUE;
+
+- question: "Calculate the total tax collected per invoice."
+  sql: |
+    SELECT invoice_id, invoice_number, total_tax
+    FROM xero_invoices;
+
+- question: "List all invoices that are overdue."
+  sql: |
+    SELECT invoice_id, invoice_number, due_date, status
+    FROM xero_invoices
+    WHERE status = 'OVERDUE';
+
+- question: "Show the total payments received in the last month."
+  sql: |
+    SELECT SUM(amount) AS total_payments
+    FROM xero_payments
+    WHERE date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 MONTH);
+
+- question: "List all customers and suppliers."
+  sql: |
+    SELECT contact_id, name, is_customer, is_supplier
+    FROM xero_contacts
+    WHERE is_customer = TRUE OR is_supplier = TRUE;
+
+- question: "Retrieve all accounts that are in the watchlist."
+  sql: |
+    SELECT account_id, code, name
+    FROM xero_accounts
+    WHERE add_to_watchlist = TRUE;
+
+- question: "Show all invoices with their payment statuses."
+  sql: |
+    SELECT i.invoice_id, i.invoice_number, p.status AS payment_status
+    FROM xero_invoices AS i
+    LEFT JOIN xero_invoice__payments AS ip ON i.invoice_id = ip.invoice_id
+    LEFT JOIN xero_payments AS p ON ip.payment_id = p.payment_id;
+
+- question: "List all payments that have validation errors."
+  sql: |
+    SELECT payment_id, reference, details
+    FROM xero_payments
+    WHERE has_validation_errors = TRUE;
+
+- question: "Get all prepayments applied to invoice 'INV-1002'."
+  sql: |
+    SELECT pp.prepayment_id, pp.amount, pp.date
+    FROM xero_invoices AS i
+    JOIN xero_invoice__payments AS ip ON i.invoice_id = ip.invoice_id
+    JOIN xero_payments AS p ON ip.payment_id = p.payment_id
+    JOIN xero_payments AS pp ON p.prepayment_id = pp.payment_id
+    WHERE i.invoice_number = 'INV-1002';
+
+- question: "Retrieve all batches of payments."
+  sql: |
+    SELECT DISTINCT batch_payment_id
+    FROM xero_payments
+    WHERE batch_payment_id IS NOT NULL;
+
+- question: "List all items that are not sold."
+  sql: |
+    SELECT item_id, name, is_sold
+    FROM xero_items
+    WHERE is_sold = FALSE;
+
+- question: "Get the total discount applied per invoice."
+  sql: |
+    SELECT invoice_id, invoice_number, total_discount
+    FROM xero_invoices;
+
+- question: "List all payments reconciled in the last week."
+  sql: |
+    SELECT payment_id, amount, date
+    FROM xero_payments
+    WHERE is_reconciled = TRUE
+      AND date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 WEEK);
+
+- question: "Show total sales per account."
+  sql: |
+    SELECT a.account_id, a.name AS account_name, SUM(li.line_amount) AS total_sales
+    FROM xero_accounts AS a
+    JOIN xero_payments AS p ON a.account_id = p.account_id
+    JOIN xero_invoice__payments AS ip ON p.payment_id = ip.payment_id
+    JOIN xero_invoice__line_items AS li ON ip.invoice_id = li.invoice_id
+    GROUP BY a.account_id, a.name;
+
+- question: "Retrieve all credit notes with remaining credit."
+  sql: |
+    SELECT cn.credit_note_id, cn.credit_note_number, cn.remaining_credit
+    FROM xero_invoice__credit_notes AS cn
+    WHERE cn.remaining_credit > 0;
+
+- question: "List all invoices with their associated credit notes and payments."
+  sql: |
+    SELECT i.invoice_id, i.invoice_number, cn.credit_note_id, p.payment_id
+    FROM xero_invoices AS i
+    LEFT JOIN xero_invoice__credit_notes AS cn ON i.invoice_id = cn.invoice_id
+    LEFT JOIN xero_invoice__payments AS ip ON i.invoice_id = ip.invoice_id
+    LEFT JOIN xero_payments AS p ON ip.payment_id = p.payment_id;
+
+- question: "Show all invoices and their associated contact persons."
+  sql: |
+    SELECT i.invoice_id, i.invoice_number, cp.first_name, cp.last_name
+    FROM xero_invoices AS i
+    JOIN xero_contacts AS c ON i.contact_id = c.contact_id
+    JOIN xero_contact__persons AS cp ON c.contact_id = cp.contact_id;
+
+- question: "List all invoices with their line items and tax breakdowns."
+  sql: |
+    SELECT i.invoice_id, i.invoice_number, li.line_item_id, li.description, li.tax_amount, tb.tax_type
+    FROM xero_invoices AS i
+    JOIN xero_invoice__line_items AS li ON i.invoice_id = li.invoice_id
+    LEFT JOIN xero_invoice__line_items AS li2 ON li.line_item_id = li2.line_item_id
+    LEFT JOIN xero_invoice__line_items AS li3 ON li.line_item_id = li3.line_item_id
+    -- Assuming TaxBreakdownComponent is stored or can be joined appropriately
+    -- Adjust the join based on actual schema
+    LEFT JOIN TaxBreakdownComponent AS tb ON li.line_item_id = tb.line_item_id
+    WHERE i.invoice_id = 'INV-1003';
+    
+- question: "Find the top 5 contacts with the highest total invoice amounts."
+  sql: |
+    SELECT c.contact_id, c.name, SUM(i.total) AS total_invoice_amount
+    FROM xero_contacts AS c
+    JOIN xero_invoices AS i ON c.contact_id = i.contact_id
+    GROUP BY c.contact_id, c.name
+    ORDER BY total_invoice_amount DESC
+    LIMIT 5;
+
+- question: "Show all invoices along with their associated payment methods."
+  sql: |
+    SELECT i.invoice_id, i.invoice_number, p.payment_type, p.amount
+    FROM xero_invoices AS i
+    JOIN xero_invoice__payments AS ip ON i.invoice_id = ip.invoice_id
+    JOIN xero_payments AS p ON ip.payment_id = p.payment_id;
+
+- question: "List all contacts who have not made any payments in the last year."
+  sql: |
+    SELECT c.contact_id, c.name
+    FROM xero_contacts AS c
+    LEFT JOIN xero_payments AS p ON c.contact_id = p.contact_id AND p.date >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 YEAR)
+    WHERE p.payment_id IS NULL;
+
+- question: "Get the average payment amount per invoice."
+  sql: |
+    SELECT i.invoice_id, i.invoice_number, AVG(p.amount) AS average_payment
+    FROM xero_invoices AS i
+    JOIN xero_invoice__payments AS ip ON i.invoice_id = ip.invoice_id
+    JOIN xero_payments AS p ON ip.payment_id = p.payment_id
+    GROUP BY i.invoice_id, i.invoice_number;
+
+- question: "Retrieve all invoices that have been fully paid."
+  sql: |
+    SELECT invoice_id, invoice_number, total, amount_paid
+    FROM xero_invoices
+    WHERE amount_due = 0;
+
+- question: "List all items along with their purchase and sales details."
+  sql: |
+    SELECT 
+      i.item_id, 
+      i.name, 
+      i.purchase_unit_price, 
+      i.sales_unit_price, 
+      i.is_purchased, 
+      i.is_sold
+    FROM xero_items AS i;
+
+- question: "Show all prepayments applied to invoices in the 'Utilities' category."
+  sql: |
+    SELECT p.prepayment_id, p.amount, p.date, i.invoice_number
+    FROM xero_payments AS p
+    JOIN xero_invoice__payments AS ip ON p.payment_id = ip.payment_id
+    JOIN xero_invoices AS i ON ip.invoice_id = i.invoice_id
+    JOIN xero_items AS it ON i.invoice_id = it.item_id
+    WHERE it.name = 'Utilities';

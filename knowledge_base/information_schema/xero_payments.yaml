@@ -1,0 +1,122 @@
+table: xero_payments
+columns:
+  - name: payment_id
+    type: string
+    primary_key: true
+    description: "The Xero identifier for a Payment, e.g., 297c2dc5-cc47-4afd-8ec8-74990b8761e9."
+    notes: "[optional]"
+
+  - name: account_id
+    type: string
+    foreign_key: xero_accounts.account_id
+    description: "The account ID associated with the payment."
+    notes: "[optional]"
+
+  - name: amount
+    type: float
+    description: "The amount of the payment. Must be <= the outstanding amount owing on the invoice."
+    notes: "[optional]"
+
+  - name: bank_amount
+    type: float
+    description: "The amount of the payment in the currency of the bank account."
+    notes: "[optional]"
+
+  - name: bank_account_number
+    type: string
+    description: "The supplier's bank account number the payment is being made to."
+    notes: "[optional]"
+
+  - name: batch_payment_id
+    type: string
+    description: "Present if the payment was created as part of a batch."
+    notes: "[optional]"
+
+  - name: code
+    type: string
+    description: "Code of account used to make the payment, e.g., 001 (note: not all accounts have a code value)."
+    notes: "[optional]"
+
+  - name: credit_note_number
+    type: string
+    description: "Number of invoice or credit note the payment is applied to, e.g., INV-4003."
+    notes: "[optional]"
+
+  - name: currency_rate
+    type: float
+    description: "Exchange rate when payment is received. Only used for non-base currency invoices and credit notes."
+    notes: "[optional]"
+
+  - name: date
+    type: date
+    description: "Date the payment is made (YYYY-MM-DD)."
+    notes: "[optional]"
+
+  - name: details
+    type: string
+    description: "Details of the payment."
+    notes: "[optional]"
+
+  - name: has_account
+    type: boolean
+    description: "Boolean indicating if the payment has an account."
+    notes: "[optional] [default to False]"
+
+  - name: has_validation_errors
+    type: boolean
+    description: "Boolean indicating if the payment has validation errors."
+    notes: "[optional] [default to False]"
+
+  - name: invoice_id
+    type: string
+    foreign_key: xero_invoices.invoice_id
+    description: "Xero identifier for the invoice."
+    notes: "[optional]"
+
+  - name: is_reconciled
+    type: boolean
+    description: "Boolean indicating whether the payment is reconciled."
+    notes: "[optional]"
+
+  - name: particulars
+    type: string
+    description: "The particulars of the payment."
+    notes: "[optional]"
+
+  - name: payment_type
+    type: string
+    description: "See Payment Types."
+    notes: "[optional]"
+
+  - name: reference
+    type: string
+    description: "An optional description for the payment, e.g., Direct Debit."
+    notes: "[optional]"
+
+  - name: status
+    type: string
+    description: "Status of the payment."
+    notes: "[optional]"
+
+  - name: status_attribute_string
+    type: string
+    description: "String indicating the payment status."
+    notes: "[optional]"
+
+  - name: updated_date_utc
+    type: timestamp
+    description: "UTC timestamp of the last update to the payment."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the record was ingested into BigQuery."
+    notes: "[optional]"
+relationships:
+  - table: xero_accounts
+    type: many-to-one
+    on: account_id
+
+  - table: xero_invoices
+    type: many-to-one
+    on: invoice_id

@@ -1,0 +1,21 @@
+table: xero_contact__group_contacts
+columns:
+  - name: contact_id
+    type: string
+    foreign_key: xero_contacts.contact_id
+    description: "Xero identifier for the contact."
+    notes: "[optional]"
+
+  - name: group_name
+    type: string
+    description: "Name of the contact group."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the record was ingested into BigQuery."
+    notes: "[optional]"
+relationships:
+  - table: xero_contacts
+    type: many-to-one
+    on: contact_id
