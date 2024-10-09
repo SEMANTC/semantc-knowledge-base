@@ -1,101 +1,98 @@
-# LangChain with Pinecone and Google Cloud Run
+# LLM-Powered Analytics for Xero (Expandable to Other Data Sources)
 
-This project demonstrates how to use LangChain with Pinecone for vector storage and Google Cloud Run for deployment. The application processes YAML files from a Google Cloud Storage bucket, splits the text into chunks, and stores the chunks in a Pinecone index.
+This project provides an LLM-powered analytics framework, currently focused on Xero accounting data but designed for future expansion to other data sources. It uses a RAG (Retrieval-Augmented Generation) knowledge base to support LLMs in constructing SQL queries and answering user prompts about financial data.
+
+## Project Overview
+
+The main purpose of this project is to:
+1. Maintain a comprehensive knowledge base of data schemas, metadata, and sample queries.
+2. Support LLM analytics by providing context for identifying relevant tables, columns, and calculations.
+3. Enable automatic SQL query construction based on user prompts.
+4. Allow for future expansion to include additional data sources beyond Xero.
 
 ## Project Structure
 
 ```
-.DS_Store
-.env
-.gitignore
-Dockerfile
-knowledge_base/
-    xero_invoices.yaml
-README.md
-requirements.txt
-src/
-    __init__.py
-    main.py
-    pinecone_setup.py
-    utils.py
+.
+├── scripts/
+│   ├── build_push.sh
+│   └── ...
+├── src/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── pinecone_setup.py
+│   └── utils.py
+├── knowledge_base/
+│   ├── information_schema/
+│   │   ├── xero_accounts.yaml
+│   │   └── ...
+│   ├── metadata/
+│   │   ├── xero_enumeration_account_type.yaml
+│   │   └── ...
+│   └── queries/
+│       └── sample_queries.yaml
+└── README.md
 ```
 
-## Prerequisites
+## Components
 
-- Python 3.9
-- Docker
-- Google Cloud SDK
-- Pinecone API Key
-- OpenAI API Key
+### Scripts
 
-## Setup
+- `build_push.sh`: Shell script for building and pushing a Docker image to Google Cloud Registry.
 
-1. **Clone the repository:**
+### Source Code
 
-    ```sh
-    git clone <repository-url>
-    cd <repository-directory>
-    ```
+- `main.py`: Main script for processing YAML files, generating embeddings, and storing them in Pinecone.
+- `pinecone_setup.py`: Module for setting up and configuring Pinecone index.
+- `utils.py`: Utility functions for processing YAML files.
 
-2. **Create a virtual environment and activate it:**
+### Knowledge Base
 
-    ```sh
-    python -m venv venv
-    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-    ```
+The knowledge base is organized into three main categories:
 
-3. **Install the dependencies:**
+1. **Information Schema**: Contains YAML files describing the structure of data tables.
+   - Example: `xero_accounts.yaml`
 
-    ```sh
-    pip install -r requirements.txt
-    ```
+2. **Metadata**: Includes enumeration files and other metadata related to the data model.
+   - Example: `xero_enumeration_account_type.yaml`
 
-4. **Set up environment variables:**
+3. **Queries**: Stores sample SQL queries for common operations.
+   - Example: `sample_queries.yaml`
 
-    Create a [`.env`](command:_github.copilot.openRelativePath?%5B%7B%22scheme%22%3A%22file%22%2C%22authority%22%3A%22%22%2C%22path%22%3A%22%2FUsers%2Ffernandomaximoferreira%2Fsrc%2Ftext2sql-knowledge-base%2F.env%22%2C%22query%22%3A%22%22%2C%22fragment%22%3A%22%22%7D%2C%229e4555d6-befb-485c-9736-18594b759a56%22%5D "/Users/fernandomaximoferreira/src/text2sql-knowledge-base/.env") file in the root directory and add the following variables:
+This structure allows LLMs to quickly retrieve relevant information when constructing SQL queries or answering user prompts.
 
-    ```env
-    OPENAI
+## How It Works
 
-_API
+1. The knowledge base is processed and embedded into a vector database (Pinecone).
+2. When a user submits a prompt, the LLM uses the RAG system to retrieve relevant context from the knowledge base.
+3. Based on this context, the LLM identifies the appropriate tables, columns, and calculations needed to answer the query.
+4. The LLM constructs an SQL query using this information.
+5. The query is executed, and the results are interpreted by the LLM to provide a human-readable answer to the user's prompt.
 
-_KEY=<your-openai-api-key>
-    PINECONE_API_KEY=<your-pinecone-api-key>
-    PINECONE_INDEX_NAME=<your-pinecone-index-name>
-    ```
+## Setup and Usage
 
-## Running the Application
+1. Ensure all required environment variables are set (OPENAI_API_KEY, PINECONE_API_KEY, PINECONE_INDEX_NAME).
+2. Run `main.py` to process the knowledge base and store embeddings in Pinecone.
+3. Implement the LLM query processing system (not included in this repository) that uses the embedded knowledge base to construct SQL queries and answer user prompts.
 
-1. **Run the application locally:**
+## Dependencies
 
-    ```sh
-    python src/main.py
-    ```
+- OpenAI API
+- Pinecone
+- LangChain
+- PyYAML
 
-2. **Build and run the Docker container:**
+## Expanding to New Data Sources
 
-    ```sh
-    docker build -t langchain-app .
-    docker run -p 8080:8080 langchain-app
-    ```
+To add support for new data sources:
 
-## Deployment to Google Cloud Run
+1. Create new YAML files in the `information_schema` directory describing the tables and columns of the new data source.
+2. Add any necessary enumeration or metadata files to the `metadata` directory.
+3. Include sample queries for the new data source in the `queries` directory.
+4. Update the embedding process in `main.py` if necessary to handle any new file types or structures.
+5. Retrain or fine-tune the LLM if required to understand the context of the new data source.
 
-1. **Build the Docker image:**
+## Contributing
 
-    ```sh
-    gcloud builds submit --tag gcr.io/<your-project-id>/langchain-app
-    ```
-
-2. **Deploy to Cloud Run:**
-
-    ```sh
-    gcloud run deploy --image gcr.io/<your-project-id>/langchain-app --platform managed
-    ```
-
-## Code Overview
-
-- **[`src/main.py`]**: Main entry point of the application. It sets up OpenAI and Pinecone, processes YAML files, and stores the text chunks in Pinecone.
-- **[`src/pinecone_setup.py`]**: Contains the function to set up Pinecone.
-- **[`src/utils.py`]**: Utility functions, including iterating over YAML files in the knowledge base directory.
+To contribute to this project, please add new YAML files to the appropriate directories in the knowledge base. Ensure that all YAML files are properly formatted and follow the established schema. When adding support for new data sources, please update the documentation accordingly.
 
