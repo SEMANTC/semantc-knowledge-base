@@ -14,7 +14,7 @@ def generate_embeddings(texts, embeddings):
     try:
         return embeddings.embed_documents(texts)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"an error occurred: {e}")
         raise
 
 def main():
@@ -23,7 +23,7 @@ def main():
     pinecone_index_name = os.getenv('PINECONE_INDEX_NAME')
 
     if not all([openai_api_key, pinecone_api_key, pinecone_index_name]):
-        raise ValueError("Please set all required environment variables.")
+        raise ValueError("please set all required environment variables.")
 
     # Set OpenAI API key
     os.environ["OPENAI_API_KEY"] = openai_api_key
@@ -38,14 +38,15 @@ def main():
     vector_store = PineconeVectorStore(index=index, embedding=embeddings)
 
     knowledge_base_dir = os.path.join(os.path.dirname(__file__), '..', 'knowledge_base')
-    for yaml_content in iterate_yaml_files(knowledge_base_dir):
+    for yaml_content in iterate_yaml_files(knowledge_base_dir, reformat=True):
+    # for yaml_content in iterate_yaml_files(knowledge_base_dir):
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
         texts = text_splitter.split_text(yaml_content)
-
+        print(knowledge_base_dir)
         embedded_texts = generate_embeddings(texts, embeddings)
         vector_store.add_texts(texts, embeddings=embedded_texts)
 
-    print("All YAML files processed and stored in Pinecone")
+    print("all YAML files processed and stored in Pinecone")
 
 if __name__ == "__main__":
     main()
