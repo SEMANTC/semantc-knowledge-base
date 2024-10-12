@@ -1,0 +1,115 @@
+table: xero_contact__phones
+description: "Semantic model for Xero Accounting API's contact phones data."
+
+columns:
+  - name: contact_id
+    type: string
+    primary_key: false
+    description: "Xero identifier for a contact."
+    notes: "[optional]"
+
+  - name: phone_area_code
+    type: string
+    description: "Area code of the contact's phone number."
+    notes: "[optional]"
+
+  - name: phone_country_code
+    type: string
+    description: "Country code of the contact's phone number."
+    notes: "[optional]"
+
+  - name: phone_number
+    type: string
+    description: "Phone number of the contact."
+    notes: "[optional]"
+
+  - name: phone_type
+    type: string
+    description: "Type of phone (e.g., MOBILE, HOME, WORK)."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the record was ingested into BigQuery."
+    notes: "[optional]"
+
+enumerations:
+  phone_type:
+    allowed_values:
+      - MOBILE
+      - HOME
+      - WORK
+      - OTHER
+
+measures:
+  - name: total_phones
+    description: "Total number of phone records."
+    agg: count
+    expr: phone_number
+
+  - name: phones_by_type
+    description: "Number of phones by type."
+    agg: count
+    expr: phone_number
+    group_by:
+      - phone_type
+
+  - name: unique_contacts_with_phones
+    description: "Number of unique contacts with at least one phone."
+    agg: count_distinct
+    expr: contact_id
+
+metrics:
+  - name: total_phones_metric
+    description: "Total number of phone records."
+    type: simple
+    label: "Total Phones"
+    type_params:
+      measure:
+        name: total_phones
+
+  - name: phones_by_type_metric
+    description: "Number of phones by type."
+    type: simple
+    label: "Phones by Type"
+    type_params:
+      measure:
+        name: phones_by_type
+
+  - name: unique_contacts_with_phones_metric
+    description: "Number of unique contacts with at least one phone."
+    type: simple
+    label: "Unique Contacts with Phones"
+    type_params:
+      measure:
+        name: unique_contacts_with_phones
+
+saved_queries:
+  - name: phones_summary
+    description: "Summary of contact phones with key metrics."
+    label: "Phones Summary"
+    config:
+      cache:
+        enabled: true
+    query_params:
+      metrics:
+        - total_phones_metric
+        - phones_by_type_metric
+        - unique_contacts_with_phones_metric
+      group_by:
+        - Dimension('phone_type')
+      where:
+        - "phone_type IS NOT NULL"
+    exports:
+      - name: phones_summary_export
+        config:
+          export_as: table
+          schema: analytics
+          alias: phones_summary_table
+
+config:
+  enabled: true
+  group: "Xero Contact Phones"
+  meta:
+    owner: "fernando@abcdataz.com"
+    last_updated: "2024-04-27"

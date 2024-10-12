@@ -1,0 +1,109 @@
+table: xero_contact__persons
+description: "Semantic model for Xero Accounting API's contact persons data."
+
+columns:
+  - name: contact_id
+    type: string
+    primary_key: false
+    description: "Xero identifier for a contact."
+    notes: "[optional]"
+
+  - name: person_email_address
+    type: string
+    description: "Email address of the contact person."
+    notes: "[optional]"
+
+  - name: person_first_name
+    type: string
+    description: "First name of the contact person."
+    notes: "[optional]"
+
+  - name: person_include_in_emails
+    type: boolean
+    description: "Indicates if the contact person is included in emails."
+    notes: "[optional]"
+
+  - name: person_last_name
+    type: string
+    description: "Last name of the contact person."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the record was ingested into BigQuery."
+    notes: "[optional]"
+
+enumerations:
+  # No specific enumerations for this table based on provided metadata.
+
+measures:
+  - name: total_persons
+    description: "Total number of contact persons."
+    agg: count
+    expr: person_email_address
+
+  - name: persons_included_in_emails
+    description: "Number of contact persons included in emails."
+    agg: count
+    expr: person_email_address
+    filter: "{{ Dimension('person_include_in_emails') }} = true"
+
+  - name: unique_contacts_with_persons
+    description: "Number of unique contacts with at least one person."
+    agg: count_distinct
+    expr: contact_id
+
+metrics:
+  - name: total_persons_metric
+    description: "Total number of contact persons."
+    type: simple
+    label: "Total Persons"
+    type_params:
+      measure:
+        name: total_persons
+
+  - name: persons_included_in_emails_metric
+    description: "Number of contact persons included in emails."
+    type: simple
+    label: "Persons Included in Emails"
+    type_params:
+      measure:
+        name: persons_included_in_emails
+
+  - name: unique_contacts_with_persons_metric
+    description: "Number of unique contacts with at least one person."
+    type: simple
+    label: "Unique Contacts with Persons"
+    type_params:
+      measure:
+        name: unique_contacts_with_persons
+
+saved_queries:
+  - name: persons_summary
+    description: "Summary of contact persons with key metrics."
+    label: "Persons Summary"
+    config:
+      cache:
+        enabled: true
+    query_params:
+      metrics:
+        - total_persons_metric
+        - persons_included_in_emails_metric
+        - unique_contacts_with_persons_metric
+      group_by:
+        - Dimension('person_include_in_emails')
+      where:
+        - "person_first_name IS NOT NULL OR person_last_name IS NOT NULL"
+    exports:
+      - name: persons_summary_export
+        config:
+          export_as: table
+          schema: analytics
+          alias: persons_summary_table
+
+config:
+  enabled: true
+  group: "Xero Contact Persons"
+  meta:
+    owner: "fernando@abcdataz.com"
+    last_updated: "2024-04-27"

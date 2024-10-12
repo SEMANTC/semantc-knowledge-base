@@ -1,0 +1,346 @@
+table: xero_payments
+description: "Semantic model for Xero Accounting API's payments data."
+
+columns:
+  - name: payment_id
+    type: string
+    primary_key: true
+    description: "The Xero identifier for a Payment, e.g., 297c2dc5-cc47-4afd-8ec8-74990b8761e9."
+    notes: "[optional]"
+
+  - name: account_id
+    type: string
+    description: "The Xero identifier for an account associated with the payment."
+    notes: "[optional]"
+
+  - name: amount
+    type: float
+    description: "The amount of the payment. Must be less than or equal to the outstanding amount owing on the invoice, e.g., 200.00."
+    notes: "[optional]"
+
+  - name: bank_amount
+    type: float
+    description: "The amount of the payment in the currency of the bank account."
+    notes: "[optional]"
+
+  - name: bank_account_number
+    type: string
+    description: "The supplier's bank account number the payment is being made to."
+    notes: "[optional]"
+
+  - name: batch_payment_id
+    type: string
+    description: "Present if the payment was created as part of a batch."
+    notes: "[optional]"
+
+  - name: code
+    type: string
+    description: "Code of the account used to make the payment, e.g., 001 (note: not all accounts have a code value)."
+    notes: "[optional]"
+
+  - name: credit_note_number
+    type: string
+    description: "Number of the credit note you are applying the payment to, e.g., INV-4003."
+    notes: "[optional]"
+
+  - name: currency_rate
+    type: float
+    description: "Exchange rate when the payment is received. Only used for non-base currency invoices and credit notes, e.g., 0.7500."
+    notes: "[optional]"
+
+  - name: date
+    type: date
+    description: "Date the payment is being made (YYYY-MM-DD), e.g., 2009-09-06."
+    notes: "[optional]"
+
+  - name: details
+    type: string
+    description: "Information to appear on the supplier's bank account."
+    notes: "[optional]"
+
+  - name: has_account
+    type: boolean
+    description: "Boolean indicating if a contact has validation errors."
+    notes: "[optional] [default to False]"
+
+  - name: has_validation_errors
+    type: boolean
+    description: "Boolean indicating if a contact has validation errors."
+    notes: "[optional] [default to False]"
+
+  - name: invoice_id
+    type: string
+    description: "The Xero identifier for the invoice associated with the payment."
+    notes: "[optional]"
+
+  - name: is_reconciled
+    type: boolean
+    description: "Boolean indicating whether the payment has been reconciled."
+    notes: "[optional]"
+
+  - name: particulars
+    type: string
+    description: "Details about the payment."
+    notes: "[optional]"
+
+  - name: payment_type
+    type: string
+    description: "Type of payment. See Payment Types."
+    notes: "[optional]"
+
+  - name: reference
+    type: string
+    description: "An optional description for the payment, e.g., Direct Debit."
+    notes: "[optional]"
+
+  - name: status
+    type: string
+    description: "The status of the payment."
+    notes: "[optional]"
+
+  - name: status_attribute_string
+    type: string
+    description: "A string indicating the invoice status."
+    notes: "[optional]"
+
+  - name: updated_date_utc
+    type: timestamp
+    description: "UTC timestamp of the last update to the payment."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the record was ingested into BigQuery."
+    notes: "[optional]"
+
+enumerations:
+  status:
+    allowed_values:
+      - AUTHORISED
+      - DELETED
+      - NONE
+
+  payment_type:
+    allowed_values:
+      - ACCRECPAYMENT
+      - ACCPAYPAYMENT
+      - ARCREDITPAYMENT
+      - APCREDITPAYMENT
+      - AROVERPAYMENTPAYMENT
+      - ARPREPAYMENTPAYMENT
+      - APPREPAYMENTPAYMENT
+      - APOVERPAYMENTPAYMENT
+      - NONE
+
+measures:
+  - name: total_payments
+    description: "Total number of payments."
+    agg: count
+    expr: payment_id
+
+  - name: total_amount
+    description: "Total amount of all payments."
+    agg: sum
+    expr: amount
+
+  - name: average_payment_amount
+    description: "Average amount per payment."
+    agg: avg
+    expr: amount
+
+  - name: active_payments
+    description: "Number of active payments."
+    agg: count
+    expr: payment_id
+    filter: "{{ Dimension('status') }} = 'AUTHORISED'"
+
+  - name: deleted_payments
+    description: "Number of deleted payments."
+    agg: count
+    expr: payment_id
+    filter: "{{ Dimension('status') }} = 'DELETED'"
+
+  - name: payments_by_type
+    description: "Number of payments by payment type."
+    agg: count
+    expr: payment_id
+    group_by:
+      - payment_type
+
+  - name: payments_over_time
+    description: "Number of payments over time."
+    agg: count
+    expr: payment_id
+    group_by:
+      - date
+
+  - name: total_bank_amount
+    description: "Total bank amount of all payments."
+    agg: sum
+    expr: bank_amount
+
+measures_grouped:
+  - name: payments_by_account
+    description: "Number of payments per account."
+    agg: count
+    expr: payment_id
+    group_by:
+      - account_id
+
+metrics:
+  - name: total_payments_metric
+    description: "Total number of payments."
+    type: simple
+    label: "Total Payments"
+    type_params:
+      measure:
+        name: total_payments
+
+  - name: total_amount_metric
+    description: "Total amount of all payments."
+    type: simple
+    label: "Total Amount"
+    type_params:
+      measure:
+        name: total_amount
+
+  - name: average_payment_amount_metric
+    description: "Average amount per payment."
+    type: simple
+    label: "Average Payment Amount"
+    type_params:
+      measure:
+        name: average_payment_amount
+
+  - name: active_payments_metric
+    description: "Number of active payments."
+    type: simple
+    label: "Active Payments"
+    type_params:
+      measure:
+        name: active_payments
+
+  - name: deleted_payments_metric
+    description: "Number of deleted payments."
+    type: simple
+    label: "Deleted Payments"
+    type_params:
+      measure:
+        name: deleted_payments
+
+  - name: payments_by_type_metric
+    description: "Number of payments by payment type."
+    type: simple
+    label: "Payments by Type"
+    type_params:
+      measure:
+        name: payments_by_type
+
+  - name: payments_over_time_metric
+    description: "Number of payments over time."
+    type: simple
+    label: "Payments Over Time"
+    type_params:
+      measure:
+        name: payments_over_time
+
+  - name: total_bank_amount_metric
+    description: "Total bank amount of all payments."
+    type: simple
+    label: "Total Bank Amount"
+    type_params:
+      measure:
+        name: total_bank_amount
+
+  - name: payments_by_account_metric
+    description: "Number of payments per account."
+    type: simple
+    label: "Payments by Account"
+    type_params:
+      measure:
+        name: payments_by_account
+
+saved_queries:
+  - name: payment_summary
+    description: "Summary of payments with key metrics."
+    label: "Payment Summary"
+    config:
+      cache:
+        enabled: true
+    query_params:
+      metrics:
+        - total_payments_metric
+        - total_amount_metric
+        - average_payment_amount_metric
+        - active_payments_metric
+        - deleted_payments_metric
+        - payments_by_type_metric
+        - payments_over_time_metric
+        - total_bank_amount_metric
+        - payments_by_account_metric
+      group_by:
+        - Dimension('payment_type')
+        - Dimension('account_id')
+        - TimeDimension('date', 'month')
+      where:
+        - "{{ Dimension('status') }} != 'DELETED'"
+    exports:
+      - name: payment_summary_export
+        config:
+          export_as: table
+          schema: analytics
+          alias: payment_summary_table
+
+sample_queries:
+  - name: total_and_active_payments
+    description: "Retrieve total and active payments."
+    sql: |
+      SELECT
+          total_payments_metric AS total_payments,
+          active_payments_metric AS active_payments
+      FROM
+          xero_payments
+
+  - name: payments_by_type_and_currency
+    description: "Retrieve payments grouped by payment type and currency."
+    sql: |
+      SELECT
+          payment_type,
+          currency_code,
+          COUNT(payment_id) AS payment_count,
+          SUM(amount) AS total_amount
+      FROM
+          xero_payments
+      GROUP BY
+          payment_type,
+          currency_code
+      ORDER BY
+          payment_count DESC
+
+  - name: payments_over_time
+    description: "Retrieve number of payments over monthly periods."
+    sql: |
+      SELECT
+          DATE_TRUNC(date, MONTH) AS month,
+          COUNT(payment_id) AS payment_count
+      FROM
+          xero_payments
+      GROUP BY
+          month
+      ORDER BY
+          month ASC
+
+  - name: total_bank_amounts
+    description: "Retrieve total bank amounts."
+    sql: |
+      SELECT
+          SUM(bank_amount) AS total_bank_amount
+      FROM
+          xero_payments
+
+config:
+  enabled: true
+  group: "Xero Payments"
+  meta:
+    owner: "fernando@abcdataz.com"
+    last_updated: "2024-04-27"

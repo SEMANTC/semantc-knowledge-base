@@ -289,5 +289,5 @@ config:
   enabled: true
   group: "Xero Accounts"
   meta:
-    owner: "data_team@example.com"
+    owner: "fernando@abcdataz.com"
     last_updated: "2024-04-27"

@@ -1,0 +1,95 @@
+table: xero_contact__group_contacts
+description: "Semantic model for Xero Accounting API's contact group memberships data."
+
+columns:
+  - name: contact_id
+    type: string
+    primary_key: false
+    description: "Xero identifier for a contact."
+    notes: "[optional]"
+
+  - name: group_name
+    type: string
+    description: "Name of the contact group."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the record was ingested into BigQuery."
+    notes: "[optional]"
+
+enumerations:
+  # No specific enumerations for this table based on provided metadata.
+
+measures:
+  - name: total_group_memberships
+    description: "Total number of contact group memberships."
+    agg: count
+    expr: group_name
+
+  - name: memberships_by_group
+    description: "Number of contacts in each group."
+    agg: count
+    expr: contact_id
+    group_by:
+      - group_name
+
+  - name: unique_groups
+    description: "Total number of unique contact groups."
+    agg: count_distinct
+    expr: group_name
+
+metrics:
+  - name: total_group_memberships_metric
+    description: "Total number of contact group memberships."
+    type: simple
+    label: "Total Group Memberships"
+    type_params:
+      measure:
+        name: total_group_memberships
+
+  - name: memberships_by_group_metric
+    description: "Number of contacts in each group."
+    type: simple
+    label: "Memberships by Group"
+    type_params:
+      measure:
+        name: memberships_by_group
+
+  - name: unique_groups_metric
+    description: "Total number of unique contact groups."
+    type: simple
+    label: "Unique Groups"
+    type_params:
+      measure:
+        name: unique_groups
+
+saved_queries:
+  - name: group_contacts_summary
+    description: "Summary of contact group memberships with key metrics."
+    label: "Group Contacts Summary"
+    config:
+      cache:
+        enabled: true
+    query_params:
+      metrics:
+        - total_group_memberships_metric
+        - memberships_by_group_metric
+        - unique_groups_metric
+      group_by:
+        - Dimension('group_name')
+      where:
+        - "group_name IS NOT NULL"
+    exports:
+      - name: group_contacts_summary_export
+        config:
+          export_as: table
+          schema: analytics
+          alias: group_contacts_summary_table
+
+config:
+  enabled: true
+  group: "Xero Contact Group Memberships"
+  meta:
+    owner: "fernando@abcdataz.com"
+    last_updated: "2024-04-27"

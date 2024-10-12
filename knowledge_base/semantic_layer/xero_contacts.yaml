@@ -1,0 +1,303 @@
+table: xero_contacts
+description: "Semantic model for Xero Accounting API's contacts data."
+
+columns:
+  - name: contact_id
+    type: string
+    primary_key: true
+    description: "Xero identifier for a contact."
+    notes: "[optional]"
+
+  - name: account_number
+    type: string
+    description: "User-defined account number. Can be updated via API and Xero UI (max length = 50)."
+    notes: "[optional]"
+
+  - name: accounts_payable_tax_type
+    type: string
+    description: "Tax type for accounts payable."
+    notes: "[optional]"
+
+  - name: accounts_receivable_tax_type
+    type: string
+    description: "Tax type for accounts receivable."
+    notes: "[optional]"
+
+  - name: bank_account_details
+    type: string
+    description: "Bank account number of the contact."
+    notes: "[optional]"
+
+  - name: contact_number
+    type: string
+    description: "Contact number of the contact."
+    notes: "[optional]"
+
+  - name: contact_status
+    type: string
+    description: "Current status of the contact – see contact status types."
+    notes: "[optional]"
+
+  - name: default_currency
+    type: string
+    description: "Default currency used by the contact."
+    notes: "[optional]"
+
+  - name: discount
+    type: float
+    description: "Default discount rate for the contact."
+    notes: "[optional]"
+
+  - name: email_address
+    type: string
+    description: "Email address of the contact person (umlauts not supported, max length = 255)."
+    notes: "[optional]"
+
+  - name: first_name
+    type: string
+    description: "First name of the contact person (max length = 255)."
+    notes: "[optional]"
+
+  - name: has_attachments
+    type: boolean
+    description: "Indicates if the contact has any attachments."
+    notes: "[optional] [default to False]"
+
+  - name: has_validation_errors
+    type: boolean
+    description: "Indicates if the contact has any validation errors."
+    notes: "[optional] [default to False]"
+
+  - name: is_customer
+    type: boolean
+    description: "Indicates if the contact has any AR invoices entered against them."
+    notes: "[optional]"
+
+  - name: is_supplier
+    type: boolean
+    description: "Indicates if the contact has any AP invoices entered against them."
+    notes: "[optional]"
+
+  - name: last_name
+    type: string
+    description: "Last name of the contact person (max length = 255)."
+    notes: "[optional]"
+
+  - name: name
+    type: string
+    description: "Full name of the contact/organization (max length = 255)."
+    notes: "[optional]"
+
+  - name: skype_user_name
+    type: string
+    description: "Skype username of the contact."
+    notes: "[optional]"
+
+  - name: tax_number
+    type: string
+    description: "Tax number of the contact – e.g., ABN (Australia), GST Number (New Zealand), VAT Number (UK), or Tax ID Number (US and global) (max length = 50)."
+    notes: "[optional]"
+
+  - name: payment_terms
+    type: string
+    description: "Default payment terms for the contact."
+    notes: "[optional]"
+
+  - name: updated_date_utc
+    type: timestamp
+    description: "UTC timestamp of the last update to the contact."
+    notes: "[optional]"
+
+  - name: website
+    type: string
+    description: "Website address for the contact (read only)."
+    notes: "[optional]"
+
+  - name: status_attribute_string
+    type: string
+    description: "Status of the contact."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the record was ingested into BigQuery."
+    notes: "[optional]"
+
+enumerations:
+  contact_status:
+    allowed_values:
+      - ACTIVE
+      - DELETED
+      - INACTIVE
+      - NONE
+
+  payment_terms:
+    allowed_values:
+      - NET_15
+      - NET_30
+      - NET_45
+      - NET_60
+      - CUSTOM
+
+measures:
+  - name: total_contacts
+    description: "Total number of contacts."
+    agg: count
+    expr: contact_id
+
+  - name: active_contacts
+    description: "Number of active contacts."
+    agg: count
+    expr: contact_id
+    filter: "{{ Dimension('contact_status') }} = 'ACTIVE'"
+
+  - name: deleted_contacts
+    description: "Number of deleted contacts."
+    agg: count
+    expr: contact_id
+    filter: "{{ Dimension('contact_status') }} = 'DELETED'"
+
+  - name: total_customers
+    description: "Total number of customers."
+    agg: count
+    expr: contact_id
+    filter: "{{ Dimension('is_customer') }} = true"
+
+  - name: total_suppliers
+    description: "Total number of suppliers."
+    agg: count
+    expr: contact_id
+    filter: "{{ Dimension('is_supplier') }} = true"
+
+  - name: total_discount
+    description: "Total discount across all contacts."
+    agg: sum
+    expr: discount
+
+  - name: average_discount
+    description: "Average discount per contact."
+    agg: avg
+    expr: discount
+
+  - name: contacts_by_currency
+    description: "Number of contacts by default currency."
+    agg: count
+    expr: contact_id
+    group_by:
+      - default_currency
+
+  - name: contacts_by_status
+    description: "Number of contacts by status."
+    agg: count
+    expr: contact_id
+    group_by:
+      - contact_status
+
+metrics:
+  - name: total_contacts_metric
+    description: "Total number of contacts."
+    type: simple
+    label: "Total Contacts"
+    type_params:
+      measure:
+        name: total_contacts
+
+  - name: active_contacts_metric
+    description: "Number of active contacts."
+    type: simple
+    label: "Active Contacts"
+    type_params:
+      measure:
+        name: active_contacts
+
+  - name: deleted_contacts_metric
+    description: "Number of deleted contacts."
+    type: simple
+    label: "Deleted Contacts"
+    type_params:
+      measure:
+        name: deleted_contacts
+
+  - name: total_customers_metric
+    description: "Total number of customers."
+    type: simple
+    label: "Total Customers"
+    type_params:
+      measure:
+        name: total_customers
+
+  - name: total_suppliers_metric
+    description: "Total number of suppliers."
+    type: simple
+    label: "Total Suppliers"
+    type_params:
+      measure:
+        name: total_suppliers
+
+  - name: total_discount_metric
+    description: "Total discount across all contacts."
+    type: simple
+    label: "Total Discount"
+    type_params:
+      measure:
+        name: total_discount
+
+  - name: average_discount_metric
+    description: "Average discount per contact."
+    type: simple
+    label: "Average Discount"
+    type_params:
+      measure:
+        name: average_discount
+
+  - name: contacts_by_currency_metric
+    description: "Number of contacts by default currency."
+    type: simple
+    label: "Contacts by Currency"
+    type_params:
+      measure:
+        name: contacts_by_currency
+
+  - name: contacts_by_status_metric
+    description: "Number of contacts by status."
+    type: simple
+    label: "Contacts by Status"
+    type_params:
+      measure:
+        name: contacts_by_status
+
+saved_queries:
+  - name: contacts_summary
+    description: "Summary of contacts with key metrics."
+    label: "Contacts Summary"
+    config:
+      cache:
+        enabled: true
+    query_params:
+      metrics:
+        - total_contacts_metric
+        - active_contacts_metric
+        - deleted_contacts_metric
+        - total_customers_metric
+        - total_suppliers_metric
+        - total_discount_metric
+        - average_discount_metric
+      group_by:
+        - Dimension('default_currency')
+        - Dimension('contact_status')
+        - TimeDimension('updated_date_utc', 'month')
+      where:
+        - "{{ Dimension('contact_status') }} != 'DELETED'"
+    exports:
+      - name: contacts_summary_export
+        config:
+          export_as: table
+          schema: analytics
+          alias: contacts_summary_table
+
+config:
+  enabled: true
+  group: "Xero Contacts"
+  meta:
+    owner: "fernando@abcdataz.com"
+    last_updated: "2024-04-27"

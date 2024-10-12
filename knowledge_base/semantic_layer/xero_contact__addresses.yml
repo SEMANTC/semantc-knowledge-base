@@ -1,0 +1,145 @@
+table: xero_contact__addresses
+description: "Semantic model for Xero Accounting API's contact addresses data."
+
+columns:
+  - name: contact_id
+    type: string
+    primary_key: false
+    description: "Xero identifier for a contact."
+    notes: "[optional]"
+
+  - name: address_line1
+    type: string
+    description: "First line of the contact's address."
+    notes: "[optional]"
+
+  - name: address_line2
+    type: string
+    description: "Second line of the contact's address."
+    notes: "[optional]"
+
+  - name: address_line3
+    type: string
+    description: "Third line of the contact's address."
+    notes: "[optional]"
+
+  - name: address_line4
+    type: string
+    description: "Fourth line of the contact's address."
+    notes: "[optional]"
+
+  - name: address_type
+    type: string
+    description: "Type of address (e.g., BILLING, SHIPPING)."
+    notes: "[optional]"
+
+  - name: attention_to
+    type: string
+    description: "Attention to field for the contact's address."
+    notes: "[optional]"
+
+  - name: city
+    type: string
+    description: "City of the contact's address."
+    notes: "[optional]"
+
+  - name: country
+    type: string
+    description: "Country of the contact's address."
+    notes: "[optional]"
+
+  - name: postal_code
+    type: string
+    description: "Postal code of the contact's address."
+    notes: "[optional]"
+
+  - name: region
+    type: string
+    description: "Region/state of the contact's address."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the record was ingested into BigQuery."
+    notes: "[optional]"
+
+enumerations:
+  address_type:
+    allowed_values:
+      - BILLING
+      - SHIPPING
+      - OTHER
+
+measures:
+  - name: total_addresses
+    description: "Total number of address records."
+    agg: count
+    expr: address_line1
+
+  - name: addresses_by_type
+    description: "Number of addresses by type."
+    agg: count
+    expr: address_line1
+    group_by:
+      - address_type
+
+  - name: unique_contacts_with_addresses
+    description: "Number of unique contacts with at least one address."
+    agg: count_distinct
+    expr: contact_id
+
+metrics:
+  - name: total_addresses_metric
+    description: "Total number of address records."
+    type: simple
+    label: "Total Addresses"
+    type_params:
+      measure:
+        name: total_addresses
+
+  - name: addresses_by_type_metric
+    description: "Number of addresses by type."
+    type: simple
+    label: "Addresses by Type"
+    type_params:
+      measure:
+        name: addresses_by_type
+
+  - name: unique_contacts_with_addresses_metric
+    description: "Number of unique contacts with at least one address."
+    type: simple
+    label: "Unique Contacts with Addresses"
+    type_params:
+      measure:
+        name: unique_contacts_with_addresses
+
+saved_queries:
+  - name: addresses_summary
+    description: "Summary of contact addresses with key metrics."
+    label: "Addresses Summary"
+    config:
+      cache:
+        enabled: true
+    query_params:
+      metrics:
+        - total_addresses_metric
+        - addresses_by_type_metric
+        - unique_contacts_with_addresses_metric
+      group_by:
+        - Dimension('address_type')
+        - Dimension('country')
+      where:
+        - "address_type IS NOT NULL"
+    exports:
+      - name: addresses_summary_export
+        config:
+          export_as: table
+          schema: analytics
+          alias: addresses_summary_table
+
+config:
+  enabled: true
+  group: "Xero Contact Addresses"
+  meta:
+    owner: "fernando@abcdataz.com"
+    last_updated: "2024-04-27"
