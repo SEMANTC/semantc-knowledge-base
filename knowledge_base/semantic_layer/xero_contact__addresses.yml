@@ -69,6 +69,9 @@ enumerations:
       - BILLING
       - SHIPPING
       - OTHER
+      - HOME
+      - OFFICE
+      - UNKNOWN
 
 measures:
   - name: total_addresses

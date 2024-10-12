@@ -2,7 +2,7 @@ import os
 import yaml
 import logging
 
-# configure logging
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s [%(levelname)s] %(message)s',
@@ -14,17 +14,17 @@ logging.basicConfig(
 
 def iterate_yaml_files(directory, reformat=True):
     """
-    generator function to iterate through all YAML files in a directory
+    Generator function to iterate through all YAML files in a directory.
     
     Args:
-        directory (str): Path to the knowledge base directory
-        reformat (bool): Whether to reformat YAML content - defaults to True
+        directory (str): Path to the knowledge base directory.
+        reformat (bool): Whether to reformat YAML content - defaults to True.
     
     Yields:
-        str or dict: YAML content as a string if reformat is True, else as a dictionary
+        str or dict: YAML content as a string if reformat is True, else as a dictionary.
     """
     if not os.path.isdir(directory):
-        logging.error(f"the directory {directory} does not exist or is not a directory.")
+        logging.error(f"The directory {directory} does not exist or is not a directory.")
         return
 
     for root, _, files in os.walk(directory):
@@ -35,12 +35,18 @@ def iterate_yaml_files(directory, reformat=True):
                     with open(file_path, 'r', encoding='utf-8') as f:
                         yaml_content = yaml.safe_load(f)
                     
+                    if yaml_content is None:
+                        logging.warning(f"YAML file {file_path} is empty.")
+                        continue
+
                     if reformat:
-                        # convert the YAML content back to a standardized string format
+                        # Convert the YAML content back to a standardized string format
                         standardized_yaml = yaml.dump(yaml_content, default_flow_style=False, sort_keys=False)
+                        logging.info(f"Processed and standardized YAML file: {file_path}")
                         yield standardized_yaml
                     else:
-                        # yield the parsed YAML content as a dictionary
+                        # Yield the parsed YAML content as a dictionary
+                        logging.info(f"Loaded YAML file as dictionary: {file_path}")
                         yield yaml_content
                 except yaml.YAMLError as e:
                     logging.error(f"YAML parsing error in file {file_path}: {e}")

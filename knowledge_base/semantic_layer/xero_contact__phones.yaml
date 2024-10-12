@@ -40,6 +40,8 @@ enumerations:
       - HOME
       - WORK
       - OTHER
+      - FAX
+      - VOICE
 
 measures:
   - name: total_phones
