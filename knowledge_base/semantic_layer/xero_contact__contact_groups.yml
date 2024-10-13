@@ -1,4 +1,4 @@
-table: xero_contact__group_contacts
+table: xero_contact__contact_groups
 description: "Semantic model for Xero Accounting API's contact group memberships data."
 
 columns:
@@ -65,7 +65,7 @@ metrics:
         name: unique_groups
 
 saved_queries:
-  - name: group_contacts_summary
+  - name: contact_groups_summary
     description: "Summary of contact group memberships with key metrics."
     label: "Group Contacts Summary"
     config:
@@ -81,11 +81,11 @@ saved_queries:
       where:
         - "group_name IS NOT NULL"
     exports:
-      - name: group_contacts_summary_export
+      - name: contact_groups_summary_export
         config:
           export_as: table
           schema: analytics
-          alias: group_contacts_summary_table
+          alias: contact_groups_summary_table
 
 config:
   enabled: true
