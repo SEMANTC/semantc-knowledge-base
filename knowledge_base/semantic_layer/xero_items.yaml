@@ -1,0 +1,204 @@
+table: xero_items
+description: "Semantic model for Xero Accounting API's items data."
+
+columns:
+  - name: item_id
+    type: string
+    primary_key: true
+    description: "The Xero identifier for an item."
+    notes: "[required]"
+
+  - name: code
+    type: string
+    description: "User defined item code (max length = 30)."
+    notes: "[required]"
+
+  - name: description
+    type: string
+    description: "The sales description of the item (max length = 4000)."
+    notes: "[optional]"
+
+  - name: inventory_asset_account_code
+    type: string
+    description: "The inventory asset account for the item. The account must be of type INVENTORY. The COGSAccountCode in PurchaseDetails is also required to create a tracked item."
+    notes: "[optional]"
+
+  - name: is_purchased
+    type: boolean
+    description: "Boolean value, defaults to true. When IsPurchased is true, the item is available for purchase transactions in the Xero UI."
+    notes: "[optional]"
+
+  - name: is_sold
+    type: boolean
+    description: "Boolean value, defaults to true. When IsSold is true, the item will be available on sales transactions in the Xero UI."
+    notes: "[optional]"
+
+  - name: is_tracked_as_inventory
+    type: boolean
+    description: "True for items that are tracked as inventory. An item will be tracked as inventory if the InventoryAssetAccountCode and COGSAccountCode are set."
+    notes: "[optional]"
+
+  - name: name
+    type: string
+    description: "The name of the item (max length = 50)."
+    notes: "[optional]"
+
+  - name: purchase_description
+    type: string
+    description: "The purchase description of the item (max length = 4000)."
+    notes: "[optional]"
+
+  - name: purchase_account_code
+    type: string
+    description: "The account code used for purchases."
+    notes: "[optional]"
+
+  - name: purchase_cogs_account_code
+    type: string
+    description: "The COGS (Cost of Goods Sold) account code used for purchases."
+    notes: "[optional]"
+
+  - name: purchase_tax_type
+    type: string
+    description: "The tax type applied to purchases."
+    notes: "[optional]"
+
+  - name: purchase_unit_price
+    type: float
+    description: "The unit price of the item for purchases."
+    notes: "[optional]"
+
+  - name: quantity_on_hand
+    type: float
+    description: "The quantity of the item on hand."
+    notes: "[optional]"
+
+  - name: sales_account_code
+    type: string
+    description: "The account code used for sales."
+    notes: "[optional]"
+
+  - name: sales_cogs_account_code
+    type: string
+    description: "The COGS (Cost of Goods Sold) account code used for sales."
+    notes: "[optional]"
+
+  - name: sales_tax_type
+    type: string
+    description: "The tax type applied to sales."
+    notes: "[optional]"
+
+  - name: sales_unit_price
+    type: float
+    description: "The unit price of the item for sales."
+    notes: "[optional]"
+
+  - name: status_attribute_string
+    type: string
+    description: "The status of the item."
+    notes: "[optional]"
+
+  - name: total_cost_pool
+    type: float
+    description: "The value of the item on hand, calculated using average cost accounting."
+    notes: "[optional]"
+
+  - name: updated_date_utc
+    type: timestamp
+    description: "The last modified date in UTC format."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the record was ingested into BigQuery."
+    notes: "[optional]"
+
+# Enumerations
+enumerations:
+  status_attribute_string:
+    allowed_values:
+      - ACTIVE
+      - ARCHIVED
+      - DELETED
+      - NONE
+
+# Measures
+measures:
+  - name: total_items
+    description: "Total number of items."
+    agg: count
+    expr: item_id
+
+  - name: total_inventory_value
+    description: "Total value of items on hand."
+    agg: sum
+    expr: total_cost_pool
+
+  - name: total_sold_items
+    description: "Total number of items marked as sold."
+    agg: count
+    expr: item_id
+    filter: "{{ Dimension('is_sold') }} = true"
+
+  - name: total_purchased_items
+    description: "Total number of items marked as purchased."
+    agg: count
+    expr: item_id
+    filter: "{{ Dimension('is_purchased') }} = true"
+
+# Metrics
+metrics:
+  - name: total_items_metric
+    description: "Total number of items."
+    type: simple
+    label: "Total Items"
+    type_params:
+      measure:
+        name: total_items
+
+  - name: total_inventory_value_metric
+    description: "Total value of inventory on hand."
+    type: simple
+    label: "Total Inventory Value"
+    type_params:
+      measure:
+        name: total_inventory_value
+
+  - name: total_sold_items_metric
+    description: "Total number of items sold."
+    type: simple
+    label: "Total Sold Items"
+    type_params:
+      measure:
+        name: total_sold_items
+
+  - name: total_purchased_items_metric
+    description: "Total number of items purchased."
+    type: simple
+    label: "Total Purchased Items"
+    type_params:
+      measure:
+        name: total_purchased_items
+
+# Saved Queries
+saved_queries:
+  - name: inventory_summary
+    description: "Summary of inventory, including total items and their value."
+    label: "Inventory Summary"
+    config:
+      cache:
+        enabled: true
+    query_params:
+      metrics:
+        - total_items_metric
+        - total_inventory_value_metric
+      group_by:
+        - Dimension('status_attribute_string')
+        - TimeDimension('updated_date_utc', 'month')
+
+config:
+  enabled: true
+  group: "Xero Items"
+  meta:
+    owner: "fernando@abcdataz.com"
+    last_updated: "2024-10-13"

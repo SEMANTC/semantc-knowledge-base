@@ -1,0 +1,363 @@
+table: xero_invoices
+description: "Semantic model for Xero Accounting API's invoices data."
+
+columns:
+  - name: invoice_id
+    type: string
+    primary_key: true
+    description: "Xero generated unique identifier for the invoice."
+    notes: "[required]"
+
+  - name: amount_credited
+    type: float
+    description: "Sum of all credit notes, overpayments, and prepayments applied to the invoice."
+    notes: "[optional]"
+
+  - name: amount_due
+    type: float
+    description: "Amount remaining to be paid on the invoice."
+    notes: "[optional]"
+
+  - name: amount_paid
+    type: float
+    description: "Sum of payments received for the invoice."
+    notes: "[optional]"
+
+  - name: branding_theme_id
+    type: string
+    description: "ID of the branding theme applied to the invoice."
+    notes: "[optional]"
+
+  - name: contact_id
+    type: string
+    description: "Xero generated unique identifier for the contact associated with the invoice."
+    notes: "[required]"
+
+  - name: currency_code
+    type: string
+    description: "Currency code used for the invoice."
+    notes: "[required]"
+
+  - name: currency_rate
+    type: float
+    description: "Exchange rate applied to the invoice."
+    notes: "[optional]"
+
+  - name: date
+    type: date
+    description: "Date the invoice was issued."
+    notes: "[required]"
+
+  - name: due_date
+    type: date
+    description: "Date by which the invoice is due for payment."
+    notes: "[optional]"
+
+  - name: expected_payment_date
+    type: date
+    description: "Expected payment date for accounts receivable invoices."
+    notes: "[optional]"
+
+  - name: fully_paid_on_date
+    type: date
+    description: "The date when the invoice was fully paid."
+    notes: "[optional]"
+
+  - name: has_attachments
+    type: boolean
+    description: "Indicates whether the invoice has any attachments."
+    notes: "[optional] [default to False]"
+
+  - name: has_errors
+    type: boolean
+    description: "Indicates whether the invoice has any validation errors."
+    notes: "[optional]"
+
+  - name: invoice_number
+    type: string
+    description: "Unique alphanumeric code identifying the invoice."
+    notes: "[optional]"
+
+  - name: is_discounted
+    type: boolean
+    description: "Indicates if discounts are applied to the invoice."
+    notes: "[optional]"
+
+  - name: line_amount_types
+    type: string
+    description: "Specifies whether line amounts are 'TaxInclusive', 'TaxExclusive', or 'NoTax'."
+    notes: "[optional]"
+
+  - name: reference
+    type: string
+    description: "Additional reference number for the invoice."
+    notes: "[optional]"
+
+  - name: status
+    type: string
+    description: "Current status of the invoice (e.g., DRAFT, SENT, PAID, VOID)."
+    notes: "[required]"
+
+  - name: sub_total
+    type: float
+    description: "Total amount excluding taxes."
+    notes: "[required]"
+
+  - name: total
+    type: float
+    description: "Total invoice amount including taxes."
+    notes: "[required]"
+
+  - name: total_discount
+    type: float
+    description: "Total discount applied across all invoice line items."
+    notes: "[optional]"
+
+  - name: total_tax
+    type: float
+    description: "Total tax amount applied to the invoice."
+    notes: "[required]"
+
+  - name: type
+    type: string
+    description: "Type of invoice (e.g., ACCPAY for Accounts Payable, ACCREC for Accounts Receivable)."
+    notes: "[required]"
+
+  - name: updated_date_utc
+    type: timestamp
+    description: "Timestamp of the last update to the invoice in UTC."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the invoice was ingested into the database."
+    notes: "[optional]"
+
+# Relationships to other invoice-related tables
+related_tables:
+  - name: xero_invoice__credit_notes
+    relation: "one_to_many"
+    key: invoice_id
+    description: "Credit notes applied to the invoice."
+  - name: xero_invoice__payments
+    relation: "one_to_many"
+    key: invoice_id
+    description: "Payments made toward the invoice."
+  - name: xero_invoice__overpayments
+    relation: "one_to_many"
+    key: invoice_id
+    description: "Overpayments applied to the invoice."
+  - name: xero_invoice__line_items
+    relation: "one_to_many"
+    key: invoice_id
+    description: "Line items listed in the invoice."
+  - name: xero_invoice__addresses
+    relation: "one_to_many"
+    key: invoice_id
+    description: "Addresses associated with the invoice for tax calculations."
+
+# Enumerations
+enumerations:
+  status:
+    allowed_values:
+      - DRAFT
+      - SENT
+      - PAID
+      - VOID
+      - DELETED
+
+  line_amount_types:
+    allowed_values:
+      - TaxInclusive
+      - TaxExclusive
+      - NoTax
+
+  type:
+    allowed_values:
+      - ACCPAY
+      - ACCREC
+
+# Measures
+measures:
+  - name: total_invoices
+    description: "Total number of invoices."
+    agg: count
+    expr: invoice_id
+
+  - name: total_paid_invoices
+    description: "Total number of fully paid invoices."
+    agg: count
+    expr: invoice_id
+    filter: "{{ Dimension('status') }} = 'PAID'"
+
+  - name: total_invoiced_amount
+    description: "Total amount invoiced, including tax."
+    agg: sum
+    expr: total
+
+# Xero Invoice Payments Table
+table: xero_invoice__payments
+description: "Details of payments made against invoices."
+
+columns:
+  - name: invoice_id
+    type: string
+    primary_key: true
+    description: "Xero generated unique identifier for the invoice."
+    notes: "[required]"
+
+  - name: payment_id
+    type: string
+    description: "Xero generated unique identifier for the payment."
+    notes: "[required]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the payment was ingested."
+    notes: "[optional]"
+
+# Xero Invoice Overpayments Table
+table: xero_invoice__overpayments
+description: "Details of overpayments made against invoices."
+
+columns:
+  - name: invoice_id
+    type: string
+    primary_key: true
+    description: "Xero generated unique identifier for the invoice."
+    notes: "[required]"
+
+  - name: overpayment_id
+    type: string
+    description: "Xero generated unique identifier for the overpayment."
+    notes: "[required]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the overpayment was ingested."
+    notes: "[optional]"
+
+# Xero Invoice Line Items Table
+table: xero_invoice__line_items
+description: "Line items listed in the invoice."
+
+columns:
+  - name: invoice_id
+    type: string
+    primary_key: true
+    description: "Xero generated unique identifier for the invoice."
+    notes: "[required]"
+
+  - name: line_item_id
+    type: string
+    description: "Xero generated unique identifier for the line item."
+    notes: "[required]"
+
+  - name: account_code
+    type: string
+    description: "Account code associated with the line item."
+    notes: "[optional]"
+
+  - name: description
+    type: string
+    description: "Description of the line item."
+    notes: "[optional]"
+
+  - name: unit_amount
+    type: float
+    description: "Unit price of the line item."
+    notes: "[optional]"
+
+  - name: quantity
+    type: float
+    description: "Quantity of the line item."
+    notes: "[optional]"
+
+  - name: discount_rate
+    type: float
+    description: "Discount rate applied to the line item."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the line item was ingested."
+    notes: "[optional]"
+
+# Xero Invoice Credit Notes Table
+table: xero_invoice__credit_notes
+description: "Details of credit notes applied to invoices."
+
+columns:
+  - name: invoice_id
+    type: string
+    primary_key: true
+    description: "Xero generated unique identifier for the invoice."
+    notes: "[required]"
+
+  - name: credit_note_id
+    type: string
+    description: "Xero generated unique identifier for the credit note."
+    notes: "[required]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the credit note was ingested."
+    notes: "[optional]"
+
+# Xero Invoice Addresses Table
+table: xero_invoice__addresses
+description: "Addresses associated with the invoice for tax calculation."
+
+columns:
+  - name: invoice_id
+    type: string
+    primary_key: true
+    description: "Xero generated unique identifier for the invoice."
+    notes: "[required]"
+
+  - name: address_type
+    type: string
+    description: "Type of address (e.g., BILLING, DELIVERY)."
+    notes: "[required]"
+
+  - name: address_line1
+    type: string
+    description: "First line of the address."
+    notes: "[optional]"
+
+  - name: address_line2
+    type: string
+    description: "Second line of the address."
+    notes: "[optional]"
+
+  - name: city
+    type: string
+    description: "City of the address."
+    notes: "[optional]"
+
+  - name: country
+    type: string
+    description: "Country of the address."
+    notes: "[optional]"
+
+  - name: postal_code
+    type: string
+    description: "Postal code of the address."
+    notes: "[optional]"
+
+  - name: region
+    type: string
+    description: "Region or state of the address."
+    notes: "[optional]"
+
+  - name: ingestion_time
+    type: timestamp
+    description: "Timestamp when the address was ingested."
+    notes: "[optional]"
+
+config:
+  enabled: true
+  group: "Xero Invoices"
+  meta:
+    owner: "fernando@abcdataz.com"
+    last_updated: "2024-04-27"
