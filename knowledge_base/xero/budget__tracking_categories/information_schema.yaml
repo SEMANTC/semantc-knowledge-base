@@ -1,0 +1,115 @@
+tables:
+  - name: xero_budget__tracking_categories
+    description: "Contains tracking category information for budgets."
+    update_frequency: "Daily"
+    historical_data: false
+    columns:
+      - name: budget_id
+        type: STRING
+        description: "Identifier linking the tracking category to the parent budget."
+        constraints:
+          - foreign_key:
+              table: xero_budgets
+              column: budget_id
+          - not_null: true
+        notes: "[required]"
+      - name: tracking_category_id
+        type: STRING
+        description: "Xero identifier for the tracking category."
+        constraints:
+          - not_null: true
+        notes: "[required]"
+      - name: name
+        type: STRING
+        description: "Name of the tracking category."
+        constraints:
+          - max_length: 100
+        notes: "[optional]"
+      - name: option
+        type: STRING
+        description: "Name of the option within the tracking category."
+        constraints:
+          - max_length: 100
+        notes: "[optional]"
+      - name: ingestion_time
+        type: TIMESTAMP
+        description: "Timestamp when the record was ingested into BigQuery."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[required]"
+    relationships:
+      - name: budget
+        type: many_to_one
+        from:
+          table: xero_budget__tracking_categories
+          column: budget_id
+        to:
+          table: xero_budgets
+          column: budget_id
+    indexes:
+      - name: idx_budget_id_tracking_category_id
+        columns:
+          - budget_id
+          - tracking_category_id
+        unique: true
+    constraints:
+      - columns:
+          - budget_id
+          - tracking_category_id
+        unique: true
+      - column: budget_id
+        not_null: true
+      - column: tracking_category_id
+        not_null: true
+    sample_data:
+      - budget_id: "c1d195d4-92aa-4abd-867a-7ac2f9d60500"
+        tracking_category_id: "e94ba240-3edf-4ef3-8317-10147b968f94"
+        name: "Region"
+        option: "North"
+        ingestion_time: "2021-01-02T00:00:00Z"
+      - budget_id: "c1d195d4-92aa-4abd-867a-7ac2f9d60500"
+        tracking_category_id: "d8580491-4167-4a81-9624-ad3bdd8e46ce"
+        name: "Salesperson"
+        option: "Daniel"
+        ingestion_time: "2021-01-02T00:00:00Z"
+    data_sensitivity: []
+    access_permissions:
+      - role: "financial_analyst"
+        access: "read"
+        columns:
+          - "*"
+      - role: "accountant"
+        access: "read_write"
+        columns:
+          - "*"
+      - role: "auditor"
+        access: "read"
+        columns:
+          - budget_id
+          - tracking_category_id
+          - name
+          - option
+    error_handling_notes: "Ensure that any API errors are appropriately handled."
+    semantic_model:
+      name: xero_budget_tracking_categories_model
+      description: "Semantic model for xero_budget__tracking_categories."
+      dimensions:
+        - name: budget_id
+          type: entity
+        - name: tracking_category_id
+          type: entity
+        - name: name
+          type: text
+        - name: option
+          type: text
+      measures:
+        - name: tracking_category_count
+          expr: 1
+          agg: count
+      metrics:
+        - name: total_tracking_categories
+          type: simple
+          label: "Total Tracking Categories"
+          type_params:
+            measure:
+              name: tracking_category_count
+          time_granularity: none

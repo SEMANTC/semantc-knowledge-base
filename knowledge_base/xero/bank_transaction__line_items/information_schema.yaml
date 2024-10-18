@@ -1,0 +1,177 @@
+tables:
+  - name: xero_bank_transaction__line_items
+    description: "Contains line item details for each bank transaction."
+    update_frequency: "Daily"
+    historical_data: false
+    columns:
+      - name: account_code
+        type: STRING
+        description: "Account code associated with the line item."
+        notes: "[required]"
+      - name: bank_transaction_id
+        type: STRING
+        description: "Identifier linking the line item to the parent bank transaction."
+        constraints:
+          - foreign_key:
+              table: xero_bank_transactions
+              column: bank_transaction_id
+        notes: "[required]"
+      - name: description
+        type: STRING
+        description: "Description of the line item."
+        notes: "[optional]"
+      - name: ingestion_time
+        type: TIMESTAMP
+        description: "Timestamp when the record was ingested into BigQuery."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[required]"
+      - name: item_code
+        type: STRING
+        description: "Item code can only be present when the Bank Transaction Type is SPEND or RECEIVE."
+        notes: "[optional]"
+      - name: line_amount
+        type: FLOAT64
+        description: "Total of the line including discount."
+        units: "Currency"
+        notes: "[required]"
+      - name: line_item_id
+        type: STRING
+        description: "Unique identifier for the line item."
+        primary_key: true
+        constraints:
+          - not_null: true
+          - unique: true
+        notes: "[required]"
+      - name: quantity
+        type: FLOAT64
+        description: "Quantity of the item."
+        units: "Count"
+        notes: "[optional]"
+      - name: tax_amount
+        type: FLOAT64
+        description: "Tax amount for the line item."
+        units: "Currency"
+        notes: "[optional]"
+      - name: tax_type
+        type: STRING
+        description: "Used as an override if the default Tax Code for the selected AccountCode is not correct."
+        notes: "[optional]"
+      - name: tracking_categories
+        type: STRING
+        description: "Optional tracking categories."
+        notes: "[optional]"
+      - name: unit_amount
+        type: FLOAT64
+        description: "Unit amount of the item."
+        units: "Currency"
+        notes: "[optional]"
+    relationships:
+      - name: bank_transaction
+        type: many_to_one
+        from:
+          table: xero_bank_transaction__line_items
+          column: bank_transaction_id
+        to:
+          table: xero_bank_transactions
+          column: bank_transaction_id
+    indexes:
+      - name: idx_line_item_id
+        columns:
+          - line_item_id
+        unique: true
+      - name: idx_bank_transaction_id
+        columns:
+          - bank_transaction_id
+    constraints:
+      - column: line_item_id
+        not_null: true
+        unique: true
+      - column: account_code
+        not_null: true
+      - column: bank_transaction_id
+        not_null: true
+      - column: line_amount
+        not_null: true
+    sample_data:
+      - line_item_id: "52208ff9-528a-4985-a9ad-b2b1d4210e38"
+        bank_transaction_id: "d20b6c54-7f5d-4ce6-ab83-55f609719126"
+        account_code: "404"
+        description: "Monthly account fee"
+        item_code: null
+        line_amount: 49.90
+        quantity: 1.0000
+        tax_amount: 0.00
+        tax_type: "NONE"
+        unit_amount: 49.90
+        tracking_categories: null
+        ingestion_time: "2021-01-02T00:00:00Z"
+    data_sensitivity:
+      - column: bank_transaction_id
+        sensitive: true
+    access_permissions:
+      - role: "financial_analyst"
+        access: "read"
+        columns:
+          - "*"
+      - role: "accountant"
+        access: "read_write"
+        columns:
+          - "*"
+      - role: "auditor"
+        access: "read"
+        columns:
+          - line_item_id
+          - bank_transaction_id
+          - account_code
+          - description
+          - line_amount
+          - tax_amount
+    error_handling_notes: "Ensure that 'line_item_id' is unique and not null to prevent data inconsistencies."
+    semantic_model:
+      name: xero_bank_transaction_line_items_model
+      description: "Semantic model for xero_bank_transaction__line_items."
+      dimensions:
+        - name: line_item_id
+          type: entity
+        - name: bank_transaction_id
+          type: entity
+        - name: account_code
+          type: categorical
+        - name: item_code
+          type: categorical
+        - name: description
+          type: text
+        - name: tax_type
+          type: categorical
+      measures:
+        - name: line_amount
+          expr: line_amount
+          agg: sum
+        - name: quantity
+          expr: quantity
+          agg: sum
+        - name: tax_amount
+          expr: tax_amount
+          agg: sum
+      metrics:
+        - name: total_line_amount
+          type: simple
+          label: "Total Line Amount"
+          type_params:
+            measure:
+              name: line_amount
+          time_granularity: month
+        - name: total_quantity
+          type: simple
+          label: "Total Quantity"
+          type_params:
+            measure:
+              name: quantity
+          time_granularity: month
+        - name: total_tax_amount
+          type: simple
+          label: "Total Tax Amount"
+          type_params:
+            measure:
+              name: tax_amount
+          time_granularity: month

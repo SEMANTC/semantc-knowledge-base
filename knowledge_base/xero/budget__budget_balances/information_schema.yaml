@@ -1,0 +1,131 @@
+tables:
+  - name: xero_budget__budget_balances
+    description: "Contains budget balance information for budget lines."
+    update_frequency: "Daily"
+    historical_data: false
+    columns:
+      - name: budget_id
+        type: STRING
+        description: "Identifier linking the budget balance to the parent budget."
+        constraints:
+          - foreign_key:
+              table: xero_budgets
+              column: budget_id
+          - not_null: true
+        notes: "[required]"
+      - name: account_id
+        type: STRING
+        description: "Xero identifier for the account."
+        constraints:
+          - foreign_key:
+              table: xero_accounts
+              column: account_id
+          - not_null: true
+        notes: "[required]"
+      - name: period
+        type: DATE
+        description: "Period the amount applies to (format 'YYYY-MM')."
+        date_format: "YYYY-MM"
+        constraints:
+          - not_null: true
+        notes: "[required]"
+      - name: amount
+        type: FLOAT64
+        description: "Budgeted amount for the period."
+        units: "Currency"
+        notes: "[optional]"
+      - name: ingestion_time
+        type: TIMESTAMP
+        description: "Timestamp when the record was ingested into BigQuery."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[required]"
+    relationships:
+      - name: budget_line
+        type: many_to_one
+        from:
+          table: xero_budget__budget_balances
+          column:
+            - budget_id
+            - account_id
+        to:
+          table: xero_budget__budget_lines
+          column:
+            - budget_id
+            - account_id
+    indexes:
+      - name: idx_budget_id_account_id_period
+        columns:
+          - budget_id
+          - account_id
+          - period
+        unique: true
+    constraints:
+      - columns:
+          - budget_id
+          - account_id
+          - period
+        unique: true
+      - column: budget_id
+        not_null: true
+      - column: account_id
+        not_null: true
+      - column: period
+        not_null: true
+    sample_data:
+      - budget_id: "c1d195d4-92aa-4abd-867a-7ac2f9d60500"
+        account_id: "9c24de87-a2b7-439d-a216-35d1af7bdec3"
+        period: "2019-08"
+        amount: 1000.00
+        ingestion_time: "2021-01-02T00:00:00Z"
+      - budget_id: "c1d195d4-92aa-4abd-867a-7ac2f9d60500"
+        account_id: "9c24de87-a2b7-439d-a216-35d1af7bdec3"
+        period: "2019-09"
+        amount: 1050.00
+        ingestion_time: "2021-01-02T00:00:00Z"
+      - budget_id: "c1d195d4-92aa-4abd-867a-7ac2f9d60500"
+        account_id: "9c24de87-a2b7-439d-a216-35d1af7bdec3"
+        period: "2019-10"
+        amount: 1102.00
+        ingestion_time: "2021-01-02T00:00:00Z"
+    data_sensitivity: []
+    access_permissions:
+      - role: "financial_analyst"
+        access: "read"
+        columns:
+          - "*"
+      - role: "accountant"
+        access: "read_write"
+        columns:
+          - "*"
+      - role: "auditor"
+        access: "read"
+        columns:
+          - budget_id
+          - account_id
+          - period
+          - amount
+    error_handling_notes: "Ensure that any API errors are appropriately handled."
+    semantic_model:
+      name: xero_budget_balances_model
+      description: "Semantic model for xero_budget__budget_balances."
+      dimensions:
+        - name: budget_id
+          type: entity
+        - name: account_id
+          type: entity
+        - name: period
+          type: time
+          type_params:
+            time_granularity: month
+      measures:
+        - name: budgeted_amount
+          expr: amount
+          agg: sum
+      metrics:
+        - name: total_budgeted_amount
+          type: simple
+          label: "Total Budgeted Amount"
+          type_params:
+            measure:
+              name: budgeted_amount
+          time_granularity: month

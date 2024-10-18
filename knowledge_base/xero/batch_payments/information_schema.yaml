@@ -1,0 +1,225 @@
+tables:
+  - name: xero_batch_payments
+    description: "Contains batch payment information from Xero."
+    update_frequency: "Daily"
+    historical_data: false
+    columns:
+      - name: account_id
+        type: STRING
+        description: "ID of the account used to make the payment."
+        constraints:
+          - foreign_key:
+              table: xero_accounts
+              column: account_id
+          - not_null: true
+        notes: "[required]"
+      - name: amount
+        type: FLOAT64
+        description: "The amount of the payment."
+        units: "Currency"
+        notes: "[optional]"
+      - name: batch_payment_id
+        type: STRING
+        description: "The Xero-generated unique identifier for the batch payment."
+        primary_key: true
+        constraints:
+          - not_null: true
+          - unique: true
+        synonyms: ["id"]
+        notes: "[required]"
+      - name: code
+        type: STRING
+        description: "(NZ Only) Optional references for the batch payment transaction."
+        constraints:
+          - max_length: 12
+        notes: "[optional] [max length = 12]"
+      - name: date
+        type: DATE
+        description: "Date the payment is being made (YYYY-MM-DD)."
+        date_format: "YYYY-MM-DD"
+        constraints:
+          - not_null: true
+        notes: "[required]"
+      - name: date_string
+        type: STRING
+        description: "Date the payment is being made as a string."
+        notes: "[optional]"
+      - name: details
+        type: STRING
+        description: "(Non-NZ Only) Details sent to the bank as a reference."
+        constraints:
+          - max_length: 18
+        notes: "[optional]"
+      - name: ingestion_time
+        type: TIMESTAMP
+        description: "Timestamp when the record was ingested into BigQuery."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[required]"
+      - name: is_reconciled
+        type: BOOLEAN
+        description: "Indicates if the batch payment has been reconciled."
+        default_value: false
+        notes: "[optional] [default to false]"
+      - name: narrative
+        type: STRING
+        description: "(UK Only) Shows on the statement line in Xero."
+        constraints:
+          - max_length: 18
+        notes: "[optional]"
+      - name: particulars
+        type: STRING
+        description: "(NZ Only) Optional references for the batch payment transaction."
+        constraints:
+          - max_length: 12
+        notes: "[optional]"
+      - name: reference
+        type: STRING
+        description: "(NZ Only) Optional references for the batch payment transaction."
+        constraints:
+          - max_length: 255
+        notes: "[optional]"
+      - name: status
+        type: STRING
+        description: "Status of the batch payment."
+        enumerated_values:
+          - AUTHORISED
+          - DELETED
+          - None
+        notes: "[optional]"
+      - name: total_amount
+        type: FLOAT64
+        description: "The total of the payments that make up the batch."
+        units: "Currency"
+        notes: "[optional]"
+      - name: type
+        type: STRING
+        description: "Type of the batch payment."
+        enumerated_values:
+          - PAYBATCH
+          - RECBATCH
+          - None
+        notes: "[optional]"
+      - name: updated_date_utc
+        type: TIMESTAMP
+        description: "UTC timestamp of the last update to the payment."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[optional]"
+      - name: validation_errors
+        type: STRING
+        description: "Array of validation error messages from the API."
+        notes: "[optional]"
+    relationships:
+      - name: account
+        type: many_to_one
+        from:
+          table: xero_batch_payments
+          column: account_id
+        to:
+          table: xero_accounts
+          column: account_id
+      - name: payments
+        type: one_to_many
+        from:
+          table: xero_batch_payments
+          column: batch_payment_id
+        to:
+          table: xero_batch_payment__payments
+          column: batch_payment_id
+    indexes:
+      - name: idx_batch_payment_id
+        columns:
+          - batch_payment_id
+        unique: true
+      - name: idx_account_id
+        columns:
+          - account_id
+    constraints:
+      - column: batch_payment_id
+        not_null: true
+        unique: true
+      - column: account_id
+        not_null: true
+      - column: date
+        not_null: true
+    sample_data:
+      - batch_payment_id: "44a1013e-4946-4a73-b207-dfe5424a5ea5"
+        account_id: "13918178-849a-4823-9a31-57b7eac713d7"
+        amount: null
+        code: null
+        date: "2018-10-03"
+        date_string: "2018-10-03T00:00:00"
+        details: null
+        is_reconciled: false
+        narrative: null
+        particulars: null
+        reference: "ref"
+        status: "AUTHORISED"
+        total_amount: 4488.55
+        type: "RECBATCH"
+        updated_date_utc: "2018-10-03T12:07:19.370Z"
+        validation_errors: null
+        ingestion_time: "2021-01-02T00:00:00Z"
+    data_sensitivity:
+      - column: account_id
+        sensitive: true
+    access_permissions:
+      - role: "financial_analyst"
+        access: "read"
+        columns:
+          - "*"
+      - role: "accountant"
+        access: "read_write"
+        columns:
+          - "*"
+      - role: "auditor"
+        access: "read"
+        columns:
+          - batch_payment_id
+          - date
+          - total_amount
+          - type
+          - status
+          - updated_date_utc
+    error_handling_notes: "Ensure that 'validation_errors' are checked when processing data to handle any API errors."
+    semantic_model:
+      name: xero_batch_payments_model
+      description: "Semantic model for xero_batch_payments."
+      dimensions:
+        - name: batch_payment_id
+          type: entity
+        - name: account_id
+          type: entity
+        - name: date
+          type: time
+          type_params:
+            time_granularity: day
+        - name: type
+          type: categorical
+        - name: status
+          type: categorical
+        - name: is_reconciled
+          type: boolean
+        - name: reference
+          type: text
+      measures:
+        - name: total_amount
+          expr: total_amount
+          agg: sum
+        - name: batch_payment_count
+          expr: 1
+          agg: count
+      metrics:
+        - name: total_batch_payments
+          type: simple
+          label: "Total Batch Payments"
+          type_params:
+            measure:
+              name: batch_payment_count
+          time_granularity: month
+        - name: total_batch_payment_amount
+          type: simple
+          label: "Total Batch Payment Amount"
+          type_params:
+            measure:
+              name: total_amount
+          time_granularity: month

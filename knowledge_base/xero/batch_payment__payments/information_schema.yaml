@@ -1,0 +1,172 @@
+tables:
+  - name: xero_batch_payment__payments
+    description: "Contains payment details for each batch payment."
+    update_frequency: "Daily"
+    historical_data: false
+    columns:
+      - name: amount
+        type: FLOAT64
+        description: "The amount being paid."
+        units: "Currency"
+        constraints:
+          - not_null: true
+        notes: "[required]"
+      - name: bank_account_number
+        type: STRING
+        description: "The supplier's bank account number the payment is being made to."
+        data_sensitivity: true
+        notes: "[optional]"
+      - name: batch_payment_id
+        type: STRING
+        description: "Identifier linking the payment to the parent batch payment."
+        constraints:
+          - foreign_key:
+              table: xero_batch_payments
+              column: batch_payment_id
+          - not_null: true
+        notes: "[required]"
+      - name: code
+        type: STRING
+        description: "(NZ Only) Information to appear on the supplier's bank account and statement."
+        constraints:
+          - max_length: 12
+        notes: "[optional]"
+      - name: details
+        type: STRING
+        description: "Information to appear on the supplier's bank account."
+        notes: "[optional]"
+      - name: ingestion_time
+        type: TIMESTAMP
+        description: "Timestamp when the record was ingested into BigQuery."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[required]"
+      - name: invoice_id
+        type: STRING
+        description: "The ID of the invoice the payment was made against."
+        constraints:
+          - foreign_key:
+              table: xero_invoices
+              column: invoice_id
+          - not_null: true
+        notes: "[required]"
+      - name: particulars
+        type: STRING
+        description: "(NZ Only) Information to appear on the supplier's bank account and statement."
+        constraints:
+          - max_length: 12
+        notes: "[optional]"
+      - name: payment_id
+        type: STRING
+        description: "The Xero-generated unique identifier for the payment."
+        primary_key: true
+        constraints:
+          - not_null: true
+          - unique: true
+        notes: "[required]"
+      - name: reference
+        type: STRING
+        description: "Information to appear on the supplier's bank account and statement."
+        constraints:
+          - max_length: 255
+        notes: "[optional]"
+    relationships:
+      - name: batch_payment
+        type: many_to_one
+        from:
+          table: xero_batch_payment__payments
+          column: batch_payment_id
+        to:
+          table: xero_batch_payments
+          column: batch_payment_id
+      - name: invoice
+        type: many_to_one
+        from:
+          table: xero_batch_payment__payments
+          column: invoice_id
+        to:
+          table: xero_invoices
+          column: invoice_id
+    indexes:
+      - name: idx_payment_id
+        columns:
+          - payment_id
+        unique: true
+      - name: idx_batch_payment_id
+        columns:
+          - batch_payment_id
+    constraints:
+      - column: payment_id
+        not_null: true
+        unique: true
+      - column: batch_payment_id
+        not_null: true
+      - column: amount
+        not_null: true
+      - column: invoice_id
+        not_null: true
+    sample_data:
+      - batch_payment_id: "44a1013e-4946-4a73-b207-dfe5424a5ea5"
+        payment_id: "a22a64cb-364e-43fa-9a1f-bb2cd1f4adde"
+        amount: 913.55
+        bank_account_number: null
+        code: null
+        details: null
+        invoice_id: "5aa9451d-95d1-4f95-a966-bbab2573f71c"
+        particulars: null
+        reference: "ref/cheque"
+        ingestion_time: "2021-01-02T00:00:00Z"
+    data_sensitivity:
+      - column: bank_account_number
+        sensitive: true
+    access_permissions:
+      - role: "financial_analyst"
+        access: "read"
+        columns:
+          - "*"
+      - role: "accountant"
+        access: "read_write"
+        columns:
+          - "*"
+      - role: "auditor"
+        access: "read"
+        columns:
+          - payment_id
+          - batch_payment_id
+          - amount
+          - invoice_id
+          - reference
+    error_handling_notes: "Ensure that any API validation errors are appropriately handled."
+    semantic_model:
+      name: xero_batch_payment_payments_model
+      description: "Semantic model for xero_batch_payment__payments."
+      dimensions:
+        - name: payment_id
+          type: entity
+        - name: batch_payment_id
+          type: entity
+        - name: invoice_id
+          type: entity
+        - name: reference
+          type: text
+      measures:
+        - name: payment_amount
+          expr: amount
+          agg: sum
+        - name: payment_count
+          expr: 1
+          agg: count
+      metrics:
+        - name: total_payments
+          type: simple
+          label: "Total Payments"
+          type_params:
+            measure:
+              name: payment_count
+          time_granularity: month
+        - name: total_payment_amount
+          type: simple
+          label: "Total Payment Amount"
+          type_params:
+            measure:
+              name: payment_amount
+          time_granularity: month

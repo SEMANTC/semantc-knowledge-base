@@ -1,0 +1,268 @@
+tables:
+  - name: xero_accounts
+    description: "Contains account information from Xero."
+    update_frequency: "Daily"
+    historical_data: false
+    columns:
+      - name: account_id
+        type: STRING
+        description: "The Xero identifier for an account—specified as a string following the endpoint name, e.g., 297c2dc5-cc47-4afd-8ec8-74990b8761e9."
+        primary_key: true
+        constraints:
+          - not_null: true
+          - unique: true
+        synonyms: ["id", "accountid"]
+        notes: "[required]"
+      - name: add_to_watchlist
+        type: BOOLEAN
+        description: "Boolean indicating whether the account is shown in the Xero dashboard watchlist widget."
+        notes: "[optional]"
+      - name: bank_account_number
+        type: STRING
+        description: "Bank account number. Applicable only for bank accounts (Account Type BANK)."
+        data_sensitivity: true
+        notes: "[optional]"
+      - name: bank_account_type
+        type: STRING
+        description: "Bank account type for bank accounts (Account Type BANK). See Bank Account Types."
+        enumerated_values:
+          - BANK
+          - CREDITCARD
+          - PAYPAL
+          - NONE
+          - ""
+          - None
+        notes: "[optional]"
+      - name: class
+        type: STRING
+        description: "Account class type. See Account Class Types."
+        enumerated_values:
+          - ASSET
+          - EQUITY
+          - EXPENSE
+          - LIABILITY
+          - REVENUE
+          - None
+        notes: "[optional]"
+      - name: code
+        type: STRING
+        description: "Customer-defined alphanumeric account code, e.g., 200 or SALES."
+        constraints:
+          - max_length: 10
+        synonyms: ["account_code"]
+        notes: "[required] [max length = 10]"
+      - name: currency_code
+        type: STRING
+        description: "Currency code used for the account. Applicable only for bank accounts (Account Type BANK)."
+        units: "ISO 4217 Currency Code"
+        notes: "[optional]"
+      - name: description
+        type: STRING
+        description: "Description of the account. Not valid for bank accounts."
+        constraints:
+          - max_length: 4000
+        notes: "[optional] [max length = 4000]"
+      - name: enable_payments_to_account
+        type: BOOLEAN
+        description: "Boolean indicating whether payments can be applied to the account. Not applicable for bank accounts."
+        notes: "[optional]"
+      - name: has_attachments
+        type: BOOLEAN
+        description: "Indicates if the account has an attachment (read-only)."
+        default_value: false
+        notes: "[optional] [default to false]"
+      - name: ingestion_time
+        type: TIMESTAMP
+        description: "Timestamp when the record was ingested into BigQuery."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[optional]"
+      - name: name
+        type: STRING
+        description: "Name of the account."
+        constraints:
+          - max_length: 150
+          - not_null: true
+        notes: "[required] [max length = 150]"
+      - name: reporting_code
+        type: STRING
+        description: "Reporting code, if set."
+        notes: "[optional]"
+      - name: reporting_code_name
+        type: STRING
+        description: "Name of the reporting code, if set."
+        notes: "[optional]"
+      - name: show_in_expense_claims
+        type: BOOLEAN
+        description: "Indicates whether the account code is available for use with expense claims."
+        notes: "[optional]"
+      - name: status
+        type: STRING
+        description: "Account status; accounts with a status of ACTIVE can be updated to ARCHIVED."
+        enumerated_values:
+          - ACTIVE
+          - ARCHIVED
+          - DELETED
+          - None
+        notes: "[optional]"
+      - name: system_account
+        type: STRING
+        description: "If this is a system account, this element is returned. See System Account types."
+        enumerated_values:
+          - DEBTORS
+          - CREDITORS
+          - BANKCURRENCYGAIN
+          - GST
+          - GSTONIMPORTS
+          - HISTORICAL
+          - REALISEDCURRENCYGAIN
+          - RETAINEDEARNINGS
+          - ROUNDING
+          - TRACKINGTRANSFERS
+          - UNPAIDEXPCLM
+          - UNREALISEDCURRENCYGAIN
+          - WAGEPAYABLES
+          - CISASSETS
+          - CISASSET
+          - CISLABOUR
+          - CISLABOUREXPENSE
+          - CISLABOURINCOME
+          - CISLIABILITY
+          - CISMATERIALS
+          - ""
+          - None
+        notes: "[optional]"
+      - name: tax_type
+        type: STRING
+        description: "Tax type used for the account. See Tax Types."
+        notes: "[optional]"
+      - name: type
+        type: STRING
+        description: "Account type. See Account Types."
+        enumerated_values:
+          - BANK
+          - CURRENT
+          - CURRLIAB
+          - DEPRECIATN
+          - DIRECTCOSTS
+          - EQUITY
+          - EXPENSE
+          - FIXED
+          - INVENTORY
+          - LIABILITY
+          - NONCURRENT
+          - OTHERINCOME
+          - OVERHEADS
+          - PREPAYMENT
+          - REVENUE
+          - SALES
+          - TERMINATION
+          - PAYGLIABILITY
+          - SUPERANNUATIONEXPENSE
+          - SUPERANNUATIONLIABILITY
+          - WAGESPAYABLELIABILITY
+          - None
+        notes: "[required]"
+      - name: updated_date_utc
+        type: TIMESTAMP
+        description: "Last modified date in UTC format."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[optional]"
+      - name: validation_errors
+        type: STRING
+        description: "Array of validation error messages from the API."
+        notes: "[optional]"
+    relationships: []
+    indexes:
+      - name: idx_xero_accounts_account_id
+        columns:
+          - account_id
+        unique: true
+    constraints:
+      - column: account_id
+        not_null: true
+        unique: true
+      - column: code
+        not_null: true
+        max_length: 10
+      - column: name
+        not_null: true
+        max_length: 150
+      - column: description
+        max_length: 4000
+    sample_data:
+      - account_id: "ebd06280-af70-4bed-97c6-7451a454ad85"
+        add_to_watchlist: true
+        bank_account_number: "0209087654321050"
+        bank_account_type: "BANK"
+        class: "ASSET"
+        code: "091"
+        currency_code: "NZD"
+        description: "Business Savings Account"
+        enable_payments_to_account: false
+        has_attachments: false
+        name: "Business Savings Account"
+        reporting_code: null
+        reporting_code_name: null
+        show_in_expense_claims: false
+        status: "ACTIVE"
+        system_account: ""
+        tax_type: "NONE"
+        type: "BANK"
+        updated_date_utc: "2021-01-01T00:00:00Z"
+        validation_errors: null
+    data_sensitivity:
+      - column: bank_account_number
+        sensitive: true
+    access_permissions:
+      - role: "financial_analyst"
+        access: "read"
+        columns:
+          - "*"
+      - role: "accountant"
+        access: "read_write"
+        columns:
+          - "*"
+      - role: "auditor"
+        access: "read"
+        columns:
+          - account_id
+          - name
+          - code
+          - type
+          - status
+          - updated_date_utc
+    error_handling_notes: "Ensure that 'validation_errors' are checked when processing data to handle any API errors."
+    semantic_model:
+      name: xero_accounts_model
+      description: "Semantic model for xero_accounts."
+      dimensions:
+        - name: account_id
+          type: entity
+        - name: code
+          type: categorical
+        - name: name
+          type: text
+        - name: type
+          type: categorical
+        - name: status
+          type: categorical
+        - name: class
+          type: categorical
+        - name: currency_code
+          type: categorical
+        - name: updated_date_utc
+          type: time
+          type_params:
+            time_granularity: day
+      measures:
+        - name: account_count
+          expr: 1
+          agg: count
+      metrics:
+        - name: total_accounts
+          type: simple
+          label: "Total Accounts"
+          type_params:
+            measure:
+              name: account_count
+          time_granularity: month

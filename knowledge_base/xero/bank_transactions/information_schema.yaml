@@ -1,0 +1,289 @@
+tables:
+  - name: xero_bank_transactions
+    description: "Contains spend and receive money transactions, overpayments, and prepayments from Xero."
+    update_frequency: "Daily"
+    historical_data: false
+    columns:
+      - name: add_to_batch_payment
+        type: BOOLEAN
+        description: "Indicates if the transaction is part of a batch payment."
+        notes: "[optional]"
+      - name: bank_account_id
+        type: STRING
+        description: "Xero-generated unique identifier for the bank account associated with the transaction."
+        constraints:
+          - foreign_key:
+              table: xero_accounts
+              column: account_id
+        notes: "[required]"
+      - name: bank_transaction_id
+        type: STRING
+        description: "Xero-generated unique identifier for the bank transaction."
+        primary_key: true
+        constraints:
+          - not_null: true
+          - unique: true
+        synonyms: ["transaction_id", "id"]
+        notes: "[required]"
+      - name: contact_id
+        type: STRING
+        description: "Xero-generated unique identifier for the contact associated with the transaction."
+        constraints:
+          - foreign_key:
+              table: xero_contacts
+              column: contact_id
+        notes: "[required for RECEIVE and SPEND types]"
+      - name: currency_code
+        type: STRING
+        description: "Currency that the bank transaction has been raised in."
+        units: "ISO 4217 Currency Code"
+        notes: "[optional]"
+      - name: currency_rate
+        type: FLOAT64
+        description: "Exchange rate to base currency when money is spent or received."
+        notes: "[optional]"
+      - name: date
+        type: DATE
+        description: "Date of the transaction – YYYY-MM-DD."
+        date_format: "YYYY-MM-DD"
+        notes: "[required]"
+      - name: fully_paid_on_date
+        type: TIMESTAMP
+        description: "Date when the transaction was fully paid."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[optional]"
+      - name: has_attachments
+        type: BOOLEAN
+        description: "Indicates if the bank transaction has an attachment."
+        default_value: false
+        notes: "[optional] [default to false]"
+      - name: ingestion_time
+        type: TIMESTAMP
+        description: "Timestamp when the record was ingested into BigQuery."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[required]"
+      - name: is_reconciled
+        type: BOOLEAN
+        description: "Indicates if the transaction is reconciled."
+        notes: "[optional]"
+      - name: line_amount_types
+        type: STRING
+        description: "Specifies how line amounts are calculated."
+        enumerated_values:
+          - EXCLUSIVE
+          - INCLUSIVE
+          - NOTAX
+        notes: "[optional]"
+      - name: overpayment_id
+        type: STRING
+        description: "Xero-generated unique identifier for an overpayment."
+        notes: "[present for SPEND-OVERPAYMENT or RECEIVE-OVERPAYMENT types]"
+      - name: prepayment_id
+        type: STRING
+        description: "Xero-generated unique identifier for a prepayment."
+        notes: "[present for SPEND-PREPAYMENT or RECEIVE-PREPAYMENT types]"
+      - name: reference
+        type: STRING
+        description: "Reference for the transaction. Only supported for SPEND and RECEIVE transactions."
+        notes: "[optional]"
+      - name: status
+        type: STRING
+        description: "Status of the bank transaction."
+        enumerated_values:
+          - AUTHORISED
+          - DELETED
+          - VOIDED
+          - None
+        notes: "[optional]"
+      - name: sub_total
+        type: FLOAT64
+        description: "Total of bank transaction excluding taxes."
+        units: "Currency"
+        notes: "[optional]"
+      - name: total
+        type: FLOAT64
+        description: "Total of bank transaction including taxes."
+        units: "Currency"
+        notes: "[optional]"
+      - name: total_tax
+        type: FLOAT64
+        description: "Total tax on the bank transaction."
+        units: "Currency"
+        notes: "[optional]"
+      - name: type
+        type: STRING
+        description: "Type of the bank transaction."
+        enumerated_values:
+          - RECEIVE
+          - RECEIVE-OVERPAYMENT
+          - RECEIVE-PREPAYMENT
+          - SPEND
+          - SPEND-OVERPAYMENT
+          - SPEND-PREPAYMENT
+          - RECEIVE-TRANSFER
+          - SPEND-TRANSFER
+          - None
+        constraints:
+          - not_null: true
+        notes: "[required]"
+      - name: updated_date_utc
+        type: TIMESTAMP
+        description: "Last modified date in UTC format."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[optional]"
+      - name: url
+        type: STRING
+        description: "URL link to a source document – shown as 'Go to App Name'."
+        notes: "[optional]"
+      - name: validation_errors
+        type: STRING
+        description: "Array of validation error messages from the API."
+        notes: "[optional]"
+    relationships:
+      - name: bank_account
+        type: many_to_one
+        from:
+          table: xero_bank_transactions
+          column: bank_account_id
+        to:
+          table: xero_accounts
+          column: account_id
+      - name: contact
+        type: many_to_one
+        from:
+          table: xero_bank_transactions
+          column: contact_id
+        to:
+          table: xero_contacts
+          column: contact_id
+      - name: line_items
+        type: one_to_many
+        from:
+          table: xero_bank_transactions
+          column: bank_transaction_id
+        to:
+          table: xero_bank_transaction__line_items
+          column: bank_transaction_id
+    indexes:
+      - name: idx_bank_transaction_id
+        columns:
+          - bank_transaction_id
+        unique: true
+      - name: idx_bank_account_id
+        columns:
+          - bank_account_id
+      - name: idx_contact_id
+        columns:
+          - contact_id
+    constraints:
+      - column: bank_transaction_id
+        not_null: true
+        unique: true
+      - column: type
+        not_null: true
+      - column: date
+        not_null: true
+      - column: bank_account_id
+        not_null: true
+    sample_data:
+      - bank_transaction_id: "d20b6c54-7f5d-4ce6-ab83-55f609719126"
+        bank_account_id: "ac993f75-035b-433c-82e0-7b7a2d40802c"
+        contact_id: "6d42f03b-181f-43e3-93fb-2025c012de92"
+        currency_code: "NZD"
+        currency_rate: null
+        date: "2014-05-26"
+        has_attachments: false
+        is_reconciled: true
+        line_amount_types: "Inclusive"
+        overpayment_id: null
+        prepayment_id: null
+        reference: "Sub 098801"
+        status: "AUTHORISED"
+        sub_total: 49.90
+        total: 49.90
+        total_tax: 0.00
+        type: "SPEND"
+        updated_date_utc: "2015-08-13T02:12:36.790Z"
+        url: null
+        validation_errors: null
+        ingestion_time: "2021-01-02T00:00:00Z"
+    data_sensitivity:
+      - column: bank_account_id
+        sensitive: true
+    access_permissions:
+      - role: "financial_analyst"
+        access: "read"
+        columns:
+          - "*"
+      - role: "accountant"
+        access: "read_write"
+        columns:
+          - "*"
+      - role: "auditor"
+        access: "read"
+        columns:
+          - bank_transaction_id
+          - bank_account_id
+          - contact_id
+          - date
+          - total
+          - type
+          - status
+          - updated_date_utc
+    error_handling_notes: "Ensure that 'validation_errors' are checked when processing data to handle any API errors."
+    semantic_model:
+      name: xero_bank_transactions_model
+      description: "Semantic model for xero_bank_transactions."
+      dimensions:
+        - name: bank_transaction_id
+          type: entity
+        - name: bank_account_id
+          type: entity
+        - name: contact_id
+          type: entity
+        - name: date
+          type: time
+          type_params:
+            time_granularity: day
+        - name: type
+          type: categorical
+        - name: status
+          type: categorical
+        - name: currency_code
+          type: categorical
+        - name: is_reconciled
+          type: boolean
+        - name: has_attachments
+          type: boolean
+      measures:
+        - name: total_amount
+          expr: total
+          agg: sum
+        - name: total_tax
+          expr: total_tax
+          agg: sum
+        - name: transaction_count
+          expr: 1
+          agg: count
+      metrics:
+        - name: total_transactions
+          type: simple
+          label: "Total Transactions"
+          type_params:
+            measure:
+              name: transaction_count
+          time_granularity: month
+        - name: total_amount
+          type: simple
+          label: "Total Transaction Amount"
+          type_params:
+            measure:
+              name: total_amount
+          time_granularity: month
+        - name: total_tax
+          type: simple
+          label: "Total Tax Amount"
+          type_params:
+            measure:
+              name: total_tax
+          time_granularity: month

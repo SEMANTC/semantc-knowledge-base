@@ -1,0 +1,129 @@
+tables:
+  - name: xero_branding_themes
+    description: "Contains branding theme information from Xero."
+    update_frequency: "Daily"
+    historical_data: false
+    columns:
+      - name: branding_theme_id
+        type: STRING
+        description: "Xero identifier for the branding theme."
+        primary_key: true
+        constraints:
+          - not_null: true
+          - unique: true
+        synonyms: ["id"]
+        notes: "[required]"
+      - name: name
+        type: STRING
+        description: "Name of the branding theme."
+        constraints:
+          - not_null: true
+          - max_length: 100
+        notes: "[required]"
+      - name: logo_url
+        type: STRING
+        description: "The URL of the logo used on the branding theme."
+        notes: "[optional]"
+      - name: type
+        type: STRING
+        description: "Type of document the branding theme can be applied to (always 'INVOICE')."
+        enumerated_values:
+          - INVOICE
+          - None
+        default_value: "INVOICE"
+        notes: "[optional] [default to 'INVOICE']"
+      - name: sort_order
+        type: INT64
+        description: "Integer indicating the ranked order of the branding theme. The default branding theme has a value of 0."
+        notes: "[optional]"
+      - name: created_date_utc
+        type: TIMESTAMP
+        description: "UTC timestamp of the creation date of the branding theme."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[optional]"
+      - name: ingestion_time
+        type: TIMESTAMP
+        description: "Timestamp when the record was ingested into BigQuery."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[required]"
+    relationships: []
+    indexes:
+      - name: idx_branding_theme_id
+        columns:
+          - branding_theme_id
+        unique: true
+    constraints:
+      - column: branding_theme_id
+        not_null: true
+        unique: true
+      - column: name
+        not_null: true
+        max_length: 100
+    sample_data:
+      - branding_theme_id: "aefae6d5-7bbe-4e2e-aadc-302cd07a0fc1"
+        name: "Standard"
+        logo_url: null
+        type: "INVOICE"
+        sort_order: 0
+        created_date_utc: "2010-06-29T11:36:36.270Z"
+        ingestion_time: "2021-01-02T00:00:00Z"
+      - branding_theme_id: "dfe23d27-a3a6-4ef3-a5ca-b9e02b142dde"
+        name: "Special Projects"
+        logo_url: "https://in.xero.com/logo?id=ZXcwS0lDQWlieUk2SUNJME5XVTBOekE0WlMxa09EWXlMVFF4TVRFdFlXSXpZUzFrWkRoalpEQXpPVEV6WlRFaUxBMEtJQ0FpWmlJNklDSXhOalJtWVRRelpDMWlOamsyTFRRNVlqSXRPR1F5TWkwMFpqTXlOamxtTnpWbU1XRWlEUXA5LVU0Zkh4TVNiYVRzPQ"
+        type: "INVOICE"
+        sort_order: 1
+        created_date_utc: "2000-01-01T00:00:00Z"
+        ingestion_time: "2021-01-02T00:00:00Z"
+      - branding_theme_id: "2ced98b8-3be9-42c4-ae79-fe3c8bca3490"
+        name: "Very orange invoice!"
+        logo_url: null
+        type: "INVOICE"
+        sort_order: 2
+        created_date_utc: "2013-01-04T07:00:58.680Z"
+        ingestion_time: "2021-01-02T00:00:00Z"
+    data_sensitivity: []
+    access_permissions:
+      - role: "financial_analyst"
+        access: "read"
+        columns:
+          - "*"
+      - role: "accountant"
+        access: "read_write"
+        columns:
+          - "*"
+      - role: "auditor"
+        access: "read"
+        columns:
+          - branding_theme_id
+          - name
+          - type
+          - created_date_utc
+    error_handling_notes: "Ensure that any API errors are appropriately handled."
+    semantic_model:
+      name: xero_branding_themes_model
+      description: "Semantic model for xero_branding_themes."
+      dimensions:
+        - name: branding_theme_id
+          type: entity
+        - name: name
+          type: text
+        - name: type
+          type: categorical
+        - name: sort_order
+          type: numeric
+        - name: created_date_utc
+          type: time
+          type_params:
+            time_granularity: day
+      measures:
+        - name: branding_theme_count
+          expr: 1
+          agg: count
+      metrics:
+        - name: total_branding_themes
+          type: simple
+          label: "Total Branding Themes"
+          type_params:
+            measure:
+              name: branding_theme_count
+          time_granularity: none

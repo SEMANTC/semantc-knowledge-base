@@ -1,0 +1,240 @@
+tables:
+  - name: xero_bank_transfers
+    description: "Contains bank transfer information from Xero."
+    update_frequency: "Daily"
+    historical_data: false
+    columns:
+      - name: amount
+        type: FLOAT64
+        description: "Amount of the transaction."
+        units: "Currency"
+        constraints:
+          - not_null: true
+        notes: "[required]"
+      - name: attachments
+        type: STRING
+        description: "Attachments associated with the bank transfer."
+        notes: "[optional]"
+      - name: bank_transfer_id
+        type: STRING
+        description: "The Xero identifier for the bank transfer."
+        primary_key: true
+        constraints:
+          - not_null: true
+          - unique: true
+        synonyms: ["transfer_id", "id"]
+        notes: "[required]"
+      - name: created_date_utc
+        type: TIMESTAMP
+        description: "UTC timestamp of creation date of bank transfer."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[optional]"
+      - name: currency_rate
+        type: FLOAT64
+        description: "The currency rate."
+        notes: "[optional]"
+      - name: date
+        type: DATE
+        description: "The date of the transfer in YYYY-MM-DD format."
+        date_format: "YYYY-MM-DD"
+        notes: "[optional]"
+      - name: from_bank_account_id
+        type: STRING
+        description: "The account ID of the source bank account."
+        constraints:
+          - foreign_key:
+              table: xero_accounts
+              column: account_id
+          - not_null: true
+        notes: "[required]"
+      - name: from_bank_transaction_id
+        type: STRING
+        description: "The Bank Transaction ID for the source account."
+        constraints:
+          - foreign_key:
+              table: xero_bank_transactions
+              column: bank_transaction_id
+        notes: "[optional]"
+      - name: from_is_reconciled
+        type: BOOLEAN
+        description: "Indicates if the bank transaction is reconciled for the source account."
+        default_value: false
+        notes: "[optional] [default to false]"
+      - name: has_attachments
+        type: BOOLEAN
+        description: "Indicates if the bank transfer has an attachment."
+        default_value: false
+        notes: "[optional] [default to false]"
+      - name: ingestion_time
+        type: TIMESTAMP
+        description: "Timestamp when the record was ingested into BigQuery."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[required]"
+      - name: reference
+        type: STRING
+        description: "Reference for the transactions."
+        notes: "[optional]"
+      - name: to_bank_account_id
+        type: STRING
+        description: "The account ID of the destination bank account."
+        constraints:
+          - foreign_key:
+              table: xero_accounts
+              column: account_id
+          - not_null: true
+        notes: "[required]"
+      - name: to_bank_transaction_id
+        type: STRING
+        description: "The Bank Transaction ID for the destination account."
+        constraints:
+          - foreign_key:
+              table: xero_bank_transactions
+              column: bank_transaction_id
+        notes: "[optional]"
+      - name: to_is_reconciled
+        type: BOOLEAN
+        description: "Indicates if the bank transaction is reconciled for the destination account."
+        default_value: false
+        notes: "[optional] [default to false]"
+      - name: validation_errors
+        type: STRING
+        description: "Array of validation error messages from the API."
+        notes: "[optional]"
+    relationships:
+      - name: from_bank_account
+        type: many_to_one
+        from:
+          table: xero_bank_transfers
+          column: from_bank_account_id
+        to:
+          table: xero_accounts
+          column: account_id
+      - name: to_bank_account
+        type: many_to_one
+        from:
+          table: xero_bank_transfers
+          column: to_bank_account_id
+        to:
+          table: xero_accounts
+          column: account_id
+      - name: from_bank_transaction
+        type: many_to_one
+        from:
+          table: xero_bank_transfers
+          column: from_bank_transaction_id
+        to:
+          table: xero_bank_transactions
+          column: bank_transaction_id
+      - name: to_bank_transaction
+        type: many_to_one
+        from:
+          table: xero_bank_transfers
+          column: to_bank_transaction_id
+        to:
+          table: xero_bank_transactions
+          column: bank_transaction_id
+    indexes:
+      - name: idx_bank_transfer_id
+        columns:
+          - bank_transfer_id
+        unique: true
+      - name: idx_from_bank_account_id
+        columns:
+          - from_bank_account_id
+      - name: idx_to_bank_account_id
+        columns:
+          - to_bank_account_id
+    constraints:
+      - column: bank_transfer_id
+        not_null: true
+        unique: true
+      - column: amount
+        not_null: true
+      - column: from_bank_account_id
+        not_null: true
+      - column: to_bank_account_id
+        not_null: true
+    sample_data:
+      - bank_transfer_id: "d79f3e07-5f11-45e4-9d1a-30be536d0e13"
+        amount: 20.00
+        attachments: null
+        created_date_utc: "2018-02-15T04:22:42Z"
+        currency_rate: 1.000000
+        date: "2018-01-25"
+        from_bank_account_id: "ac993f75-035b-433c-82e0-7b7a2d40802c"
+        from_bank_transaction_id: "b11794bc-775b-4f78-9b28-8f13240082ff"
+        from_is_reconciled: true
+        has_attachments: false
+        reference: "Sub 098801"
+        to_bank_account_id: "ebd06280-af70-4bed-97c6-7451a454ad85"
+        to_bank_transaction_id: "f589fb5e-34b3-4392-8207-4ba5a093eae"
+        to_is_reconciled: true
+        validation_errors: null
+        ingestion_time: "2021-01-02T00:00:00Z"
+    data_sensitivity:
+      - column: from_bank_account_id
+        sensitive: true
+      - column: to_bank_account_id
+        sensitive: true
+    access_permissions:
+      - role: "financial_analyst"
+        access: "read"
+        columns:
+          - "*"
+      - role: "accountant"
+        access: "read_write"
+        columns:
+          - "*"
+      - role: "auditor"
+        access: "read"
+        columns:
+          - bank_transfer_id
+          - date
+          - amount
+          - from_bank_account_id
+          - to_bank_account_id
+          - reference
+          - created_date_utc
+    error_handling_notes: "Ensure that 'validation_errors' are checked when processing data to handle any API errors."
+    semantic_model:
+      name: xero_bank_transfers_model
+      description: "Semantic model for xero_bank_transfers."
+      dimensions:
+        - name: bank_transfer_id
+          type: entity
+        - name: from_bank_account_id
+          type: entity
+        - name: to_bank_account_id
+          type: entity
+        - name: date
+          type: time
+          type_params:
+            time_granularity: day
+        - name: reference
+          type: text
+        - name: from_is_reconciled
+          type: boolean
+        - name: to_is_reconciled
+          type: boolean
+      measures:
+        - name: transfer_amount
+          expr: amount
+          agg: sum
+        - name: transfer_count
+          expr: 1
+          agg: count
+      metrics:
+        - name: total_transfers
+          type: simple
+          label: "Total Bank Transfers"
+          type_params:
+            measure:
+              name: transfer_count
+          time_granularity: month
+        - name: total_transfer_amount
+          type: simple
+          label: "Total Transfer Amount"
+          type_params:
+            measure:
+              name: transfer_amount
+          time_granularity: month

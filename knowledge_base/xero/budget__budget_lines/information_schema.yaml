@@ -1,0 +1,125 @@
+tables:
+  - name: xero_budget__budget_lines
+    description: "Contains budget line information for budgets."
+    update_frequency: "Daily"
+    historical_data: false
+    columns:
+      - name: budget_id
+        type: STRING
+        description: "Identifier linking the budget line to the parent budget."
+        constraints:
+          - foreign_key:
+              table: xero_budgets
+              column: budget_id
+          - not_null: true
+        notes: "[required]"
+      - name: account_id
+        type: STRING
+        description: "Xero identifier for the account."
+        constraints:
+          - foreign_key:
+              table: xero_accounts
+              column: account_id
+          - not_null: true
+        notes: "[required]"
+      - name: account_code
+        type: STRING
+        description: "Customer-defined alpha-numeric account code."
+        notes: "[optional]"
+      - name: ingestion_time
+        type: TIMESTAMP
+        description: "Timestamp when the record was ingested into BigQuery."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[required]"
+    relationships:
+      - name: budget
+        type: many_to_one
+        from:
+          table: xero_budget__budget_lines
+          column: budget_id
+        to:
+          table: xero_budgets
+          column: budget_id
+      - name: account
+        type: many_to_one
+        from:
+          table: xero_budget__budget_lines
+          column: account_id
+        to:
+          table: xero_accounts
+          column: account_id
+      - name: budget_balances
+        type: one_to_many
+        from:
+          table: xero_budget__budget_lines
+          column:
+            - budget_id
+            - account_id
+        to:
+          table: xero_budget__budget_balances
+          column:
+            - budget_id
+            - account_id
+    indexes:
+      - name: idx_budget_id_account_id
+        columns:
+          - budget_id
+          - account_id
+        unique: true
+    constraints:
+      - columns:
+          - budget_id
+          - account_id
+        unique: true
+      - column: budget_id
+        not_null: true
+      - column: account_id
+        not_null: true
+    sample_data:
+      - budget_id: "c1d195d4-92aa-4abd-867a-7ac2f9d60500"
+        account_id: "9c24de87-a2b7-439d-a216-35d1af7bdec3"
+        account_code: "200"
+        ingestion_time: "2021-01-02T00:00:00Z"
+      - budget_id: "c1d195d4-92aa-4abd-867a-7ac2f9d60500"
+        account_id: "385f90ae-e798-4990-9b1c-db8eb8b735c2"
+        account_code: "420"
+        ingestion_time: "2021-01-02T00:00:00Z"
+    data_sensitivity: []
+    access_permissions:
+      - role: "financial_analyst"
+        access: "read"
+        columns:
+          - "*"
+      - role: "accountant"
+        access: "read_write"
+        columns:
+          - "*"
+      - role: "auditor"
+        access: "read"
+        columns:
+          - budget_id
+          - account_id
+          - account_code
+    error_handling_notes: "Ensure that any API errors are appropriately handled."
+    semantic_model:
+      name: xero_budget_lines_model
+      description: "Semantic model for xero_budget__budget_lines."
+      dimensions:
+        - name: budget_id
+          type: entity
+        - name: account_id
+          type: entity
+        - name: account_code
+          type: categorical
+      measures:
+        - name: budget_line_count
+          expr: 1
+          agg: count
+      metrics:
+        - name: total_budget_lines
+          type: simple
+          label: "Total Budget Lines"
+          type_params:
+            measure:
+              name: budget_line_count
+          time_granularity: none

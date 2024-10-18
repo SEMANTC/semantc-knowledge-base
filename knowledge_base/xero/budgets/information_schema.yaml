@@ -1,0 +1,127 @@
+tables:
+  - name: xero_budgets
+    description: "Contains budget information from Xero."
+    update_frequency: "Daily"
+    historical_data: false
+    columns:
+      - name: budget_id
+        type: STRING
+        description: "Xero identifier for the budget."
+        primary_key: true
+        constraints:
+          - not_null: true
+          - unique: true
+        synonyms: ["id"]
+        notes: "[required]"
+      - name: description
+        type: STRING
+        description: "The budget description."
+        constraints:
+          - max_length: 255
+        notes: "[optional]"
+      - name: type
+        type: STRING
+        description: "Type of budget. 'OVERALL' or 'TRACKING'."
+        enumerated_values:
+          - OVERALL
+          - TRACKING
+          - None
+        notes: "[optional]"
+      - name: updated_date_utc
+        type: TIMESTAMP
+        description: "UTC timestamp of the last update to the budget."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[optional]"
+      - name: ingestion_time
+        type: TIMESTAMP
+        description: "Timestamp when the record was ingested into BigQuery."
+        date_format: "ISO 8601 UTC timestamp"
+        notes: "[required]"
+    relationships:
+      - name: tracking_categories
+        type: one_to_many
+        from:
+          table: xero_budgets
+          column: budget_id
+        to:
+          table: xero_budget__tracking_categories
+          column: budget_id
+      - name: budget_lines
+        type: one_to_many
+        from:
+          table: xero_budgets
+          column: budget_id
+        to:
+          table: xero_budget__budget_lines
+          column: budget_id
+    indexes:
+      - name: idx_budget_id
+        columns:
+          - budget_id
+        unique: true
+    constraints:
+      - column: budget_id
+        not_null: true
+        unique: true
+      - column: description
+        max_length: 255
+    sample_data:
+      - budget_id: "c1d195d4-92aa-4abd-867a-7ac2f9d60500"
+        description: "Daniel's Northern Budget"
+        type: "TRACKING"
+        updated_date_utc: "2017-08-14T01:18:26.74Z"
+        ingestion_time: "2021-01-02T00:00:00Z"
+      - budget_id: "ce205173-7387-4651-9726-2cf4c5405ba2"
+        description: "Adam's Southern Budget"
+        type: "TRACKING"
+        updated_date_utc: "2019-01-19T01:09:20.87Z"
+        ingestion_time: "2021-01-02T00:00:00Z"
+      - budget_id: "821731a3-b1e0-436d-929f-a3423bbd813b"
+        description: "Demo Company Full Budget"
+        type: "OVERALL"
+        updated_date_utc: "2020-01-19T11:00:55.12Z"
+        ingestion_time: "2021-01-02T00:00:00Z"
+    data_sensitivity: []
+    access_permissions:
+      - role: "financial_analyst"
+        access: "read"
+        columns:
+          - "*"
+      - role: "accountant"
+        access: "read_write"
+        columns:
+          - "*"
+      - role: "auditor"
+        access: "read"
+        columns:
+          - budget_id
+          - description
+          - type
+          - updated_date_utc
+    error_handling_notes: "Ensure that any API errors are appropriately handled."
+    semantic_model:
+      name: xero_budgets_model
+      description: "Semantic model for xero_budgets."
+      dimensions:
+        - name: budget_id
+          type: entity
+        - name: description
+          type: text
+        - name: type
+          type: categorical
+        - name: updated_date_utc
+          type: time
+          type_params:
+            time_granularity: day
+      measures:
+        - name: budget_count
+          expr: 1
+          agg: count
+      metrics:
+        - name: total_budgets
+          type: simple
+          label: "Total Budgets"
+          type_params:
+            measure:
+              name: budget_count
+          time_granularity: none
